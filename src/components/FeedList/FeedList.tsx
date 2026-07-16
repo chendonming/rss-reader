@@ -1,0 +1,175 @@
+import {
+  NavLink,
+  Stack,
+  ActionIcon,
+  Tooltip,
+  Text,
+  Badge,
+  Group,
+  Box,
+  Loader,
+} from "@mantine/core";
+import {
+  IconRss,
+  IconStar,
+  IconPlus,
+  IconRefresh,
+} from "@tabler/icons-react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getFeeds, refreshAll } from "../../api";
+import type { Feed } from "../../types";
+import { AddFeedModal } from "./AddFeedModal";
+import { useState } from "react";
+import { notifications } from "@mantine/notifications";
+
+export function FeedList() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { feedId } = useParams();
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const {
+    data: feeds,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["feeds"],
+    queryFn: getFeeds,
+  });
+
+  const handleRefreshAll = async () => {
+    try {
+      const count = await refreshAll();
+      queryClient.invalidateQueries({ queryKey: ["feeds"] });
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      if (count > 0) {
+        notifications.show({
+          title: "Refreshed",
+          message: `Fetched ${count} new articles`,
+          color: "green",
+        });
+      } else {
+        notifications.show({
+          title: "Up to date",
+          message: "No new articles",
+        });
+      }
+    } catch (e) {
+      notifications.show({
+        title: "Error",
+        message: String(e),
+        color: "red",
+      });
+    }
+  };
+
+  const isActive = (path: string) => location.pathname === path;
+
+  const totalUnread =
+    feeds?.reduce((sum, f) => sum + f.unread_count, 0) ?? 0;
+
+  return (
+    <>
+      <Stack h="100%" gap={0}>
+        <Group px="sm" pb="xs" justify="space-between">
+          <Text size="sm" c="dimmed" fw={500}>
+            Feeds
+          </Text>
+          <Group gap={4}>
+            <Tooltip label="Refresh all">
+              <ActionIcon variant="subtle" size="sm" onClick={handleRefreshAll}>
+                <IconRefresh size={14} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Add feed">
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={() => setAddModalOpen(true)}
+              >
+                <IconPlus size={14} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        </Group>
+
+        <NavLink
+          label={
+            <Group gap="xs" wrap="nowrap">
+              <Text size="sm">All Articles</Text>
+              {totalUnread > 0 && (
+                <Badge size="xs" variant="filled" color="gray">
+                  {totalUnread}
+                </Badge>
+              )}
+            </Group>
+          }
+          leftSection={<IconRss size={16} />}
+          active={isActive("/")}
+          onClick={() => navigate("/")}
+          styles={{ root: { borderRadius: "var(--mantine-radius-sm)" } }}
+        />
+
+        <NavLink
+          label="Starred"
+          leftSection={<IconStar size={16} />}
+          active={isActive("/starred")}
+          onClick={() => navigate("/starred")}
+          styles={{ root: { borderRadius: "var(--mantine-radius-sm)" } }}
+        />
+
+        <Box
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            marginTop: "var(--mantine-spacing-xs)",
+          }}
+        >
+          {isLoading && (
+            <Group justify="center" py="xl">
+              <Loader size="sm" />
+            </Group>
+          )}
+          {isError && (
+            <Text size="sm" c="dimmed" ta="center" py="xl">
+              Failed to load feeds
+            </Text>
+          )}
+          {feeds?.map((feed: Feed) => (
+            <NavLink
+              key={feed.id}
+              label={
+                <Group gap="xs" wrap="nowrap">
+                  <Text size="sm" lineClamp={1}>
+                    {feed.title}
+                  </Text>
+                  {feed.unread_count > 0 && (
+                    <Badge size="xs" variant="light" color="blue">
+                      {feed.unread_count}
+                    </Badge>
+                  )}
+                </Group>
+              }
+              leftSection={<IconRss size={14} />}
+              active={feed.id === feedId}
+              onClick={() => navigate(`/feed/${feed.id}`)}
+              styles={{ root: { borderRadius: "var(--mantine-radius-sm)" } }}
+            />
+          ))}
+          {feeds?.length === 0 && !isLoading && (
+            <Text size="sm" c="dimmed" ta="center" py="xl">
+              No feeds yet. Click + to add one.
+            </Text>
+          )}
+        </Box>
+      </Stack>
+
+      <AddFeedModal
+        opened={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+      />
+    </>
+  );
+}

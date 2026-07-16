@@ -1,0 +1,39 @@
+{
+  "name": "rss-reader",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "A desktop RSS reader built with Tauri 2.x, React, and Mantine",
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
+    "@types/dompurify": "^3.0.5",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "postcss": "^8.5.19",
+    "postcss-preset-mantine": "^1.18.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.4"
+  },
+  "dependencies": {
+    "@mantine/core": "^9.4.1",
+    "@mantine/hooks": "^9.4.1",
+    "@mantine/notifications": "^9.4.1",
+    "@tabler/icons-react": "^3.44.0",
+    "@tanstack/react-query": "^5.101.2",
+    "@tauri-apps/api": "^2.11.1",
+    "dompurify": "^3.4.12",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.1"
+  }
+}
