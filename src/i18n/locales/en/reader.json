@@ -14,5 +14,7 @@
   "starred": "Starred",
   "selectArticle": "Select an article to read",
   "noArticlesYet": "No articles yet. Add a feed or refresh.",
-  "reTranslate": "Re-translate"
+  "reTranslate": "Re-translate",
+  "fetchFullContent": "Fetch full content",
+  "fetchFailed": "Failed to fetch content"
 }

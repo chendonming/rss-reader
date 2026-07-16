@@ -14,5 +14,7 @@
   "starred": "星标",
   "selectArticle": "选择一篇文章阅读",
   "noArticlesYet": "暂无文章，请添加订阅源或刷新。",
-  "reTranslate": "重新翻译"
+  "reTranslate": "重新翻译",
+  "fetchFullContent": "获取全文",
+  "fetchFailed": "获取全文失败"
 }

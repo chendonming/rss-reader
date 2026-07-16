@@ -16,6 +16,7 @@ import {
   IconEye,
   IconEyeOff,
   IconRefresh,
+  IconFileDescription,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -29,6 +30,7 @@ import {
   translateArticle,
   summarizeArticle,
   getTranslationLayout,
+  fetchFullContent,
 } from "../../api";
 import type { Article, TranslationLayout } from "../../types";
 import { notifications } from "@mantine/notifications";
@@ -50,6 +52,8 @@ export function ArticleReader({ article }: Props) {
     article.summary_ai ?? null
   );
   const [layoutMode, setLayoutMode] = useState<TranslationLayout>("replace");
+  const [fullContent, setFullContent] = useState<string | null>(null);
+  const [isFetchingFullContent, setIsFetchingFullContent] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -65,14 +69,41 @@ export function ArticleReader({ article }: Props) {
     setSummaryText(article.summary_ai ?? null);
     setShowTranslation(false);
     setShowSummary(false);
+    setFullContent(null);
+    setIsFetchingFullContent(false);
+
+    const shouldFetch = !article.content || article.content.length < 500;
+    if (shouldFetch && article.link) {
+      let cancelled = false;
+      setIsFetchingFullContent(true);
+      fetchFullContent(article.id)
+        .then((content) => {
+          if (!cancelled) {
+            setFullContent(content);
+            queryClient.invalidateQueries({ queryKey: ["articles"] });
+          }
+        })
+        .catch((e) => {
+          if (!cancelled) {
+            log.error("fetchFullContent failed:", e);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setIsFetchingFullContent(false);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
   }, [article.id]);
 
+  const effectiveContent = fullContent ?? article.content;
   const sanitizedContent = useMemo(() => {
-    if (!article.content) return "";
-    return DOMPurify.sanitize(article.content, {
+    if (!effectiveContent) return "";
+    return DOMPurify.sanitize(effectiveContent, {
       ADD_ATTR: ["target"],
     });
-  }, [article.content]);
+  }, [effectiveContent]);
 
   const markReadMutation = useMutation({
     mutationFn: () => markRead(article.id),
@@ -127,6 +158,27 @@ export function ArticleReader({ article }: Props) {
     if (article.link) {
       window.open(article.link, "_blank");
     }
+  };
+
+  const handleFetchFullContent = () => {
+    if (isFetchingFullContent) return;
+    setIsFetchingFullContent(true);
+    fetchFullContent(article.id)
+      .then((content) => {
+        setFullContent(content);
+        queryClient.invalidateQueries({ queryKey: ["articles"] });
+      })
+      .catch((e) => {
+        log.error("fetchFullContent failed:", e);
+        notifications.show({
+          title: t("fetchFailed"),
+          message: e.message,
+          color: "red",
+        });
+      })
+      .finally(() => {
+        setIsFetchingFullContent(false);
+      });
   };
 
   const handleTranslateClick = () => {
@@ -207,7 +259,7 @@ export function ArticleReader({ article }: Props) {
             <h1 className="rd-reader-title">{article.title}</h1>
             {renderArticleMeta()}
             {renderSummary()}
-            {article.content ? renderOriginalContent() : null}
+            {effectiveContent ? renderOriginalContent() : null}
           </Box>
           <Divider orientation="vertical" />
           <Box style={{ flex: 1, minWidth: 0 }} pl="md">
@@ -230,7 +282,7 @@ export function ArticleReader({ article }: Props) {
         {renderSummary()}
         {layoutMode === "replace" && showTranslation && translationText
           ? renderTranslationPanel()
-          : article.content
+          : effectiveContent
             ? renderOriginalContent()
             : null}
       </div>
@@ -283,6 +335,17 @@ export function ArticleReader({ article }: Props) {
         </div>
 
         <div className="rd-reader-toolbar-group">
+          {article.link && (!article.content || article.content.length < 500) && (
+            <Button
+              variant="light"
+              size="compact-sm"
+              leftSection={<IconFileDescription size={13} />}
+              onClick={handleFetchFullContent}
+              loading={isFetchingFullContent}
+            >
+              {t("fetchFullContent")}
+            </Button>
+          )}
           <Button
             variant="light"
             size="compact-sm"

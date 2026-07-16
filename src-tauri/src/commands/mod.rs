@@ -342,3 +342,30 @@ pub async fn test_ai_connection(config: AiConfig) -> Result<String, String> {
     );
     ai::call_test(&config).await
 }
+
+#[tauri::command]
+pub async fn fetch_full_content(state: State<'_, AppState>, id: String) -> Result<String, String> {
+    log::info!("fetch_full_content called: id={}", id);
+
+    // Step 1: Get article link (lock+release before blocking HTTP call)
+    let link = {
+        let db = state.db.lock().map_err(|e| e.to_string())?;
+        let article = db.get_article(&id).map_err(|e| e.to_string())?;
+        article.link.ok_or_else(|| "Article has no link".to_string())?
+    };
+
+    // Step 2: Fetch full content (blocking — spawn to avoid blocking the async runtime)
+    let content = tokio::task::spawn_blocking(move || {
+        fetcher::fetch_article_content(&link)
+    })
+    .await
+    .map_err(|e| format!("Fetch task failed: {}", e))??;
+
+    // Step 3: Persist to DB (re-acquire lock)
+    let db = state.db.lock().map_err(|e| e.to_string())?;
+    db.update_article_content(&id, &content)
+        .map_err(|e| e.to_string())?;
+
+    log::info!("fetch_full_content: done for id={}", id);
+    Ok(content)
+}

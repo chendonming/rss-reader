@@ -182,4 +182,12 @@ impl Database {
         )?;
         Ok(())
     }
+
+    pub fn update_article_content(&self, id: &str, content: &str) -> rusqlite::Result<()> {
+        self.conn().execute(
+            "UPDATE articles SET content = ?1 WHERE id = ?2",
+            params![content, id],
+        )?;
+        Ok(())
+    }
 }

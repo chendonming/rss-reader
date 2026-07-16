@@ -96,3 +96,7 @@ export async function getTranslationLayout(): Promise<string> {
 export async function setTranslationLayout(layout: string): Promise<void> {
   return invokeCmd("set_translation_layout", { layout });
 }
+
+export async function fetchFullContent(id: string): Promise<string> {
+  return invokeCmd("fetch_full_content", { id });
+}

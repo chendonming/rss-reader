@@ -25,3 +25,6 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4"] }
 log = "0.4"
 env_logger = "0.11"
+scraper = "0.22"
+url = "2"
+regex = "1"
