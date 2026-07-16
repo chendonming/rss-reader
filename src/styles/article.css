@@ -77,3 +77,104 @@
   max-width: 100%;
   border: none;
 }
+
+/* Markdown content (AI translation / summary) */
+.markdown-content {
+  line-height: 1.8;
+  font-size: 16px;
+  color: var(--mantine-color-text);
+}
+
+.markdown-content p {
+  margin-bottom: 1em;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 2em;
+  margin-bottom: 1em;
+}
+
+.markdown-content li {
+  margin-bottom: 0.3em;
+}
+
+.markdown-content pre {
+  overflow-x: auto;
+  padding: var(--mantine-spacing-md);
+  background-color: var(--mantine-color-gray-0);
+  border-radius: var(--mantine-radius-sm);
+  font-size: 14px;
+  margin-bottom: 1em;
+}
+
+[data-mantine-color-scheme="dark"] .markdown-content pre {
+  background-color: var(--mantine-color-dark-6);
+  color: var(--mantine-color-dark-0);
+}
+
+.markdown-content code {
+  font-size: 0.9em;
+  padding: 2px 6px;
+  background-color: var(--mantine-color-gray-0);
+  border-radius: 4px;
+}
+
+[data-mantine-color-scheme="dark"] .markdown-content code {
+  background-color: var(--mantine-color-dark-5);
+  color: var(--mantine-color-dark-0);
+}
+
+.markdown-content pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.markdown-content blockquote {
+  border-left: 3px solid var(--mantine-color-gray-4);
+  margin-left: 0;
+  padding-left: var(--mantine-spacing-md);
+  color: var(--mantine-color-dimmed);
+  margin-bottom: 1em;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1em;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid var(--mantine-color-gray-3);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+[data-mantine-color-scheme="dark"] .markdown-content th,
+[data-mantine-color-scheme="dark"] .markdown-content td {
+  border-color: var(--mantine-color-dark-4);
+}
+
+.markdown-content th {
+  background-color: var(--mantine-color-gray-0);
+  font-weight: 600;
+}
+
+[data-mantine-color-scheme="dark"] .markdown-content th {
+  background-color: var(--mantine-color-dark-6);
+}
+
+.markdown-content a {
+  color: var(--mantine-color-anchor);
+  text-decoration: underline;
+}

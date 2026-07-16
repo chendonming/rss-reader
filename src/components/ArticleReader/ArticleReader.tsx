@@ -27,6 +27,9 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import DOMPurify from "dompurify";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import {
   markRead,
   toggleStar,
@@ -175,7 +178,11 @@ export function ArticleReader({ article }: Props) {
           <IconRobot size={16} />
           <Text fw={600} size="sm">{t("aiSummary")}</Text>
         </Group>
-        <Text size="sm">{summaryText}</Text>
+        <Box className="markdown-content">
+          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+            {summaryText}
+          </ReactMarkdown>
+        </Box>
       </Paper>
     ) : null;
 
@@ -192,7 +199,11 @@ export function ArticleReader({ article }: Props) {
         <IconLanguage size={16} />
         <Text fw={600} size="sm">{t("chineseTranslation")}</Text>
       </Group>
-      <Text style={{ whiteSpace: "pre-wrap" }}>{translationText}</Text>
+      <Box className="markdown-content">
+        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+          {translationText}
+        </ReactMarkdown>
+      </Box>
     </>
   );
 

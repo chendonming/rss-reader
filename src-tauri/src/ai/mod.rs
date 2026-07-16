@@ -19,7 +19,7 @@ impl AiProvider {
 
 pub fn call_translate(config: &AiConfig, content: &str) -> Result<String, String> {
     let prompt = format!(
-        "Translate the following text to Chinese. Keep the original formatting (paragraphs, line breaks, etc.). Only output the translation, nothing else.\n\n---\n{}",
+        "Translate the following text to Chinese. Use Markdown for formatting (lists, code blocks, etc.). Only output the translation, nothing else.\n\n---\n{}",
         content
     );
     call_ai(config, &prompt)
