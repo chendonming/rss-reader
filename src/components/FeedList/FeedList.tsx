@@ -4,6 +4,9 @@ import {
   Text,
   Loader,
   Group,
+  Modal,
+  Button,
+  Stack,
 } from "@mantine/core";
 import {
   IconRss,
@@ -29,6 +32,7 @@ export function FeedList() {
   const location = useLocation();
   const { feedId } = useParams();
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [deleteConfirmFeed, setDeleteConfirmFeed] = useState<Feed | null>(null);
   const queryClient = useQueryClient();
 
   const {
@@ -68,13 +72,10 @@ export function FeedList() {
     }
   };
 
-  const handleDeleteFeed = async (feed: Feed, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!window.confirm(t("confirmDelete", { title: feed.title }))) return;
+  const handleDeleteFeed = async (feed: Feed) => {
     try {
       await deleteFeed(feed.id);
       queryClient.invalidateQueries({ queryKey: ["feeds"] });
-      queryClient.invalidateQueries({ queryKey: ["articles"] });
       notifications.show({
         title: tc("feedDeleted"),
         message: "",
@@ -90,6 +91,8 @@ export function FeedList() {
         message: String(e),
         color: "red",
       });
+    } finally {
+      setDeleteConfirmFeed(null);
     }
   };
 
@@ -175,7 +178,10 @@ export function FeedList() {
                   size="xs"
                   className="rd-nav-delete"
                   color="gray"
-                  onClick={(e) => handleDeleteFeed(feed, e)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteConfirmFeed(feed);
+                  }}
                 >
                   <IconTrash size={12} />
                 </ActionIcon>
@@ -199,6 +205,33 @@ export function FeedList() {
         opened={addModalOpen}
         onClose={() => setAddModalOpen(false)}
       />
+
+      <Modal
+        opened={!!deleteConfirmFeed}
+        onClose={() => setDeleteConfirmFeed(null)}
+        title={t("deleteFeed")}
+        centered
+      >
+        <Stack>
+          <Text size="sm">
+            {t("confirmDelete", { title: deleteConfirmFeed?.title ?? "" })}
+          </Text>
+          <Group justify="flex-end">
+            <Button
+              variant="default"
+              onClick={() => setDeleteConfirmFeed(null)}
+            >
+              {tc("cancel")}
+            </Button>
+            <Button
+              color="red"
+              onClick={() => deleteConfirmFeed && handleDeleteFeed(deleteConfirmFeed)}
+            >
+              {t("deleteFeed")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </>
   );
 }

@@ -16,5 +16,6 @@
   "loading": "Loading...",
   "save": "Save Settings",
   "add": "Add",
+  "cancel": "Cancel",
   "failedToLoadArticles": "Failed to load articles"
 }
