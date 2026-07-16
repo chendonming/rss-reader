@@ -70,6 +70,14 @@ export function ArticleReader({ article }: Props) {
     });
   }, []);
 
+  // Reset translation/summary state when switching articles
+  useEffect(() => {
+    setTranslationText(article.translation ?? null);
+    setSummaryText(article.summary_ai ?? null);
+    setShowTranslation(false);
+    setShowSummary(false);
+  }, [article.id]);
+
   const sanitizedContent = useMemo(() => {
     if (!article.content) return "";
     return DOMPurify.sanitize(article.content, {
