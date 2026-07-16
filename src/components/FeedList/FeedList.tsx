@@ -1,13 +1,9 @@
 import {
-  NavLink,
-  Stack,
   ActionIcon,
   Tooltip,
   Text,
-  Badge,
-  Group,
-  Box,
   Loader,
+  Group,
 } from "@mantine/core";
 import {
   IconRss,
@@ -49,7 +45,6 @@ export function FeedList() {
       const count = await refreshAll();
       queryClient.invalidateQueries({ queryKey: ["feeds"] });
       queryClient.invalidateQueries({ queryKey: ["articles"] });
-      log.info("Refresh all completed: " + count + " new articles");
       if (count > 0) {
         notifications.show({
           title: tc("refreshed"),
@@ -79,61 +74,53 @@ export function FeedList() {
 
   return (
     <>
-      <Stack h="100%" gap={0}>
-        <Group px="sm" pb="xs" justify="space-between">
-          <Text size="sm" c="dimmed" fw={500}>
-            {t("feeds")}
-          </Text>
-          <Group gap={4}>
+      <div className="rd-sidebar">
+        <div className="rd-sidebar-nav">
+          <div
+            className={"rd-nav-item" + (isActive("/") ? " active" : "")}
+            onClick={() => navigate("/")}
+          >
+            <IconRss className="rd-nav-icon" />
+            <span className="rd-nav-label">{t("allArticles")}</span>
+            {totalUnread > 0 && (
+              <span className="rd-nav-count">
+                {totalUnread > 99 ? "99+" : totalUnread}
+              </span>
+            )}
+          </div>
+
+          <div
+            className={"rd-nav-item" + (isActive("/starred") ? " active" : "")}
+            onClick={() => navigate("/starred")}
+          >
+            <IconStar className="rd-nav-icon" />
+            <span className="rd-nav-label">{t("starred")}</span>
+          </div>
+        </div>
+
+        <div className="rd-sidebar-divider" />
+
+        <div className="rd-sidebar-section-header">
+          <span className="rd-sidebar-section-label">{t("feeds")}</span>
+          <span className="rd-sidebar-section-actions">
             <Tooltip label={t("refreshAll")}>
-              <ActionIcon variant="subtle" size="sm" onClick={handleRefreshAll}>
-                <IconRefresh size={14} />
+              <ActionIcon variant="subtle" size="xs" onClick={handleRefreshAll}>
+                <IconRefresh size={12} />
               </ActionIcon>
             </Tooltip>
             <Tooltip label={t("addFeed")}>
               <ActionIcon
                 variant="subtle"
-                size="sm"
+                size="xs"
                 onClick={() => setAddModalOpen(true)}
               >
-                <IconPlus size={14} />
+                <IconPlus size={12} />
               </ActionIcon>
             </Tooltip>
-          </Group>
-        </Group>
+          </span>
+        </div>
 
-        <NavLink
-          label={
-            <Group gap="xs" wrap="nowrap">
-              <Text size="sm">{t("allArticles")}</Text>
-              {totalUnread > 0 && (
-                <Badge size="xs" variant="filled" color="gray">
-                  {totalUnread}
-                </Badge>
-              )}
-            </Group>
-          }
-          leftSection={<IconRss size={16} />}
-          active={isActive("/")}
-          onClick={() => navigate("/")}
-          styles={{ root: { borderRadius: "var(--mantine-radius-sm)" } }}
-        />
-
-        <NavLink
-          label={t("starred")}
-          leftSection={<IconStar size={16} />}
-          active={isActive("/starred")}
-          onClick={() => navigate("/starred")}
-          styles={{ root: { borderRadius: "var(--mantine-radius-sm)" } }}
-        />
-
-        <Box
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            marginTop: "var(--mantine-spacing-xs)",
-          }}
-        >
+        <div className="rd-sidebar-feeds">
           {isLoading && (
             <Group justify="center" py="xl">
               <Loader size="sm" />
@@ -145,33 +132,31 @@ export function FeedList() {
             </Text>
           )}
           {feeds?.map((feed: Feed) => (
-            <NavLink
+            <div
               key={feed.id}
-              label={
-                <Group gap="xs" wrap="nowrap">
-                  <Text size="sm" lineClamp={1}>
-                    {feed.title}
-                  </Text>
-                  {feed.unread_count > 0 && (
-                    <Badge size="xs" variant="light" color="blue">
-                      {feed.unread_count}
-                    </Badge>
-                  )}
-                </Group>
+              className={
+                "rd-nav-item" +
+                (feed.id === feedId ? " active" : "") +
+                (feed.unread_count > 0 ? " has-unread" : "")
               }
-              leftSection={<IconRss size={14} />}
-              active={feed.id === feedId}
               onClick={() => navigate(`/feed/${feed.id}`)}
-              styles={{ root: { borderRadius: "var(--mantine-radius-sm)" } }}
-            />
+            >
+              <IconRss className="rd-nav-icon" />
+              <span className="rd-nav-label">{feed.title}</span>
+              {feed.unread_count > 0 && (
+                <span className="rd-nav-count">
+                  {feed.unread_count > 99 ? "99+" : feed.unread_count}
+                </span>
+              )}
+            </div>
           ))}
           {feeds?.length === 0 && !isLoading && (
             <Text size="sm" c="dimmed" ta="center" py="xl">
               {t("noFeedsYet")}
             </Text>
           )}
-        </Box>
-      </Stack>
+        </div>
+      </div>
 
       <AddFeedModal
         opened={addModalOpen}

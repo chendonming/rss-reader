@@ -1,16 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
-  Box,
   Text,
   Group,
-  Stack,
-  ScrollArea,
-  Card,
-  Badge,
   ActionIcon,
   Tooltip,
   Loader,
-  Divider,
 } from "@mantine/core";
 import {
   IconStar,
@@ -22,16 +16,69 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useParams, useLocation } from "react-router-dom";
 import { useHotkeys } from "@mantine/hooks";
-import { getArticles, markAllRead, toggleStar, deleteFeed, refreshFeed, markRead, refreshAll } from "../api";
+import {
+  getArticles,
+  markAllRead,
+  toggleStar,
+  deleteFeed,
+  refreshFeed,
+  markRead,
+  refreshAll,
+} from "../api";
 import type { Article } from "../types";
 import { ArticleReader } from "../components/ArticleReader/ArticleReader";
 import { notifications } from "@mantine/notifications";
 import { log } from "../utils/logger";
 
+function formatDateLabel(dateStr: string, locale: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const isThisYear = date.getFullYear() === now.getFullYear();
+  return date.toLocaleDateString(locale, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    ...(isThisYear ? {} : { year: "numeric" }),
+  });
+}
+
+function groupByDate(
+  articles: Article[],
+  locale: string
+): Array<{ key: string; label: string; articles: Article[] }> {
+  const groups = new Map<string, Article[]>();
+
+  for (const article of articles) {
+    const key = article.pub_date
+      ? new Date(article.pub_date).toDateString()
+      : "unknown";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(article);
+  }
+
+  return Array.from(groups.entries())
+    .sort(([aKey, aArticles], [bKey, bArticles]) => {
+      if (aKey === "unknown") return 1;
+      if (bKey === "unknown") return -1;
+      const aTime = new Date(aArticles[0].pub_date!).getTime();
+      const bTime = new Date(bArticles[0].pub_date!).getTime();
+      return bTime - aTime;
+    })
+    .map(([key, articles]) => ({
+      key,
+      label:
+        key === "unknown"
+          ? ""
+          : formatDateLabel(articles[0].pub_date!, locale),
+      articles,
+    }));
+}
+
 export default function ArticleListPage() {
   const { t } = useTranslation("reader");
   const { t: tl } = useTranslation("layout");
   const { t: tc } = useTranslation("common");
+  const { i18n } = useTranslation();
   const { feedId } = useParams();
   const location = useLocation();
   const isStarred = location.pathname === "/starred";
@@ -41,13 +88,25 @@ export default function ArticleListPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["articles", feedId ?? "__all", isStarred],
     queryFn: () => {
-      log.info("Loading articles: feed=" + (feedId ?? "__all") + ", starred=" + isStarred);
+      log.info(
+        "Loading articles: feed=" +
+          (feedId ?? "__all") +
+          ", starred=" +
+          isStarred
+      );
       return getArticles(feedId, isStarred, 1, 100);
     },
   });
 
   const articles: Article[] = data?.articles ?? [];
-  const selectedArticle = articles.find((a: Article) => a.id === selectedId) ?? null;
+  const selectedArticle = articles.find(
+    (a: Article) => a.id === selectedId
+  ) ?? null;
+
+  const dateGroups = useMemo(
+    () => groupByDate(articles, i18n.language),
+    [articles, i18n.language]
+  );
 
   const toggleStarMutation = useMutation({
     mutationFn: (id: string) => toggleStar(id),
@@ -114,7 +173,11 @@ export default function ArticleListPage() {
     },
     onError: (e: Error) => {
       log.error("Refresh failed:", e.message);
-      notifications.show({ title: tc("refreshFailed"), message: e.message, color: "red" });
+      notifications.show({
+        title: tc("refreshFailed"),
+        message: e.message,
+        color: "red",
+      });
     },
   });
 
@@ -160,6 +223,11 @@ export default function ArticleListPage() {
     ],
   ]);
 
+  const handleToggleStar = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    toggleStarMutation.mutate(id);
+  };
+
   if (isError) {
     return (
       <Group justify="center" py="xl">
@@ -171,20 +239,14 @@ export default function ArticleListPage() {
   return (
     <Group h="100%" gap={0} align="stretch" wrap="nowrap">
       {/* Article List */}
-      <Box
-        style={{
-          width: 380,
-          flexShrink: 0,
-          borderRight: "1px solid var(--mantine-color-default-border)",
-        }}
-      >
-        <Group px="md" py="sm" justify="space-between">
-          <Text fw={600} size="sm">
+      <div className="rd-article-list">
+        <div className="rd-article-list-header">
+          <span className="rd-article-list-title">
             {isStarred
               ? t("starred")
-              : `${t("articles", { count: data?.total ?? 0 })}`}
-          </Text>
-          <Group gap={4}>
+              : t("articles", { count: data?.total ?? 0 })}
+          </span>
+          <span className="rd-article-list-actions">
             {feedId && (
               <>
                 <Tooltip label={tl("markAllRead")}>
@@ -208,96 +270,97 @@ export default function ArticleListPage() {
                 </Tooltip>
               </>
             )}
-          </Group>
-        </Group>
-        <Divider />
-        <ScrollArea h="calc(100vh - 100px)" type="hover">
+          </span>
+        </div>
+
+        <div className="rd-article-scroll">
           {isLoading && (
             <Group justify="center" py="xl">
               <Loader size="sm" />
             </Group>
           )}
-          <Stack gap={2} p="xs">
-            {articles.map((article: Article) => (
-              <Card
-                key={article.id}
-                padding="sm"
-                withBorder
-                style={{
-                  cursor: "pointer",
-                  opacity: article.is_read ? 0.65 : 1,
-                  borderColor:
-                    selectedId === article.id
-                      ? "var(--mantine-color-blue-5)"
-                      : undefined,
-                }}
-                onClick={() => {
-                  setSelectedId(article.id);
-                }}
-              >
-                <Group justify="space-between" wrap="nowrap" mb={4}>
-                  <Text
-                    size="sm"
-                    fw={article.is_read ? 400 : 600}
-                    lineClamp={2}
-                    style={{ flex: 1 }}
-                  >
-                    {article.title}
-                  </Text>
-                  <ActionIcon
-                    variant="subtle"
-                    size="xs"
-                    color="yellow"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      toggleStarMutation.mutate(article.id);
-                    }}
-                  >
-                    {article.starred ? (
-                      <IconStarFilled size={12} />
-                    ) : (
-                      <IconStar size={12} />
+          {dateGroups.map((group) => (
+            <div key={group.key}>
+              <div className="rd-date-divider">
+                <span className="rd-date-divider-label">{group.label}</span>
+                <span className="rd-date-divider-line" />
+              </div>
+              {group.articles.map((article: Article) => (
+                <div
+                  key={article.id}
+                  className={
+                    "rd-article-item" +
+                    (selectedId === article.id ? " selected" : "") +
+                    (article.is_read ? " read" : "")
+                  }
+                  onClick={() => {
+                    setSelectedId(article.id);
+                  }}
+                >
+                  <div className="rd-article-item-top">
+                    <span className="rd-unread-dot" />
+                    <span className="rd-article-item-title">
+                      {article.title}
+                    </span>
+                    <span
+                      className={
+                        "rd-star-btn" +
+                        (article.starred ? " starred" : "")
+                      }
+                      onClick={(e) => handleToggleStar(e, article.id)}
+                    >
+                      {article.starred ? (
+                        <IconStarFilled size={12} />
+                      ) : (
+                        <IconStar size={12} />
+                      )}
+                    </span>
+                  </div>
+                  <div className="rd-article-item-meta">
+                    {article.feed_title && (
+                      <span className="rd-article-item-source">
+                        {article.feed_title}
+                      </span>
                     )}
-                  </ActionIcon>
-                </Group>
-                <Group gap="xs">
-                  {article.feed_title && (
-                    <Badge size="xs" variant="light" color="gray">
-                      {article.feed_title}
-                    </Badge>
+                    {article.feed_title && article.pub_date && (
+                      <span>·</span>
+                    )}
+                    {article.pub_date && (
+                      <span>
+                        {new Date(article.pub_date).toLocaleDateString(
+                          i18n.language,
+                          { month: "short", day: "numeric" }
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  {article.summary && (
+                    <div className="rd-article-item-summary">
+                      {article.summary}
+                    </div>
                   )}
-                  {article.pub_date && (
-                    <Text size="xs" c="dimmed">
-                      {new Date(article.pub_date).toLocaleDateString()}
-                    </Text>
-                  )}
-                </Group>
-                {article.summary && (
-                  <Text size="xs" c="dimmed" lineClamp={2} mt={4}>
-                    {article.summary}
-                  </Text>
-                )}
-              </Card>
-            ))}
-            {articles.length === 0 && !isLoading && (
-              <Text size="sm" c="dimmed" ta="center" py="xl">
-                {t("noArticlesYet")}
-              </Text>
-            )}
-          </Stack>
-        </ScrollArea>
-      </Box>
+                </div>
+              ))}
+            </div>
+          ))}
+          {articles.length === 0 && !isLoading && (
+            <div className="rd-empty">
+              <div className="rd-empty-text">{t("noArticlesYet")}</div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Article Reader */}
-      <Box style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
         {selectedArticle ? (
           <ArticleReader article={selectedArticle} />
         ) : (
-          <Group justify="center" align="center" h="100%">
-            <Text c="dimmed">{t("selectArticle")}</Text>
-          </Group>
+          <div className="rd-empty">
+            <div className="rd-empty-text">{t("selectArticle")}</div>
+          </div>
         )}
-      </Box>
+      </div>
     </Group>
   );
 }

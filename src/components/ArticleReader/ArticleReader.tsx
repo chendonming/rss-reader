@@ -2,16 +2,10 @@ import { useState, useMemo, useEffect } from "react";
 import "../../styles/article.css";
 import {
   Box,
-  Text,
-  Group,
-  Stack,
-  ScrollArea,
   ActionIcon,
   Tooltip,
   Button,
-  Paper,
   Divider,
-  Title,
 } from "@mantine/core";
 import {
   IconStar,
@@ -58,7 +52,6 @@ export function ArticleReader({ article }: Props) {
   const [layoutMode, setLayoutMode] = useState<TranslationLayout>("replace");
   const queryClient = useQueryClient();
 
-  // Load persisted layout preference
   useEffect(() => {
     getTranslationLayout().then((layout) => {
       if (layout === "replace" || layout === "side-by-side") {
@@ -67,7 +60,6 @@ export function ArticleReader({ article }: Props) {
     });
   }, []);
 
-  // Reset translation/summary state when switching articles
   useEffect(() => {
     setTranslationText(article.translation ?? null);
     setSummaryText(article.summary_ai ?? null);
@@ -146,46 +138,44 @@ export function ArticleReader({ article }: Props) {
   };
 
   const renderArticleMeta = () => (
-    <Group gap="xs" mb="lg">
+    <div className="rd-reader-meta">
       {article.feed_title && (
-        <Text size="sm" c="dimmed">
-          {article.feed_title}
-        </Text>
+        <span>{article.feed_title}</span>
       )}
       {article.author && (
         <>
-          <Text size="sm" c="dimmed">·</Text>
-          <Text size="sm" c="dimmed">{article.author}</Text>
+          <span className="rd-reader-meta-sep">·</span>
+          <span>{article.author}</span>
         </>
       )}
       {article.pub_date && (
         <>
-          <Text size="sm" c="dimmed">·</Text>
-          <Text size="sm" c="dimmed">
+          <span className="rd-reader-meta-sep">·</span>
+          <span>
             {new Date(article.pub_date).toLocaleDateString(i18n.language, {
               year: "numeric",
               month: "long",
               day: "numeric",
             })}
-          </Text>
+          </span>
         </>
       )}
-    </Group>
+    </div>
   );
 
   const renderSummary = () =>
     showSummary && summaryText ? (
-      <Paper p="md" mb="md" withBorder bg="var(--mantine-color-blue-0)">
-        <Group gap="xs" mb="xs">
-          <IconRobot size={16} />
-          <Text fw={600} size="sm">{t("aiSummary")}</Text>
-        </Group>
+      <div className="rd-ai-panel">
+        <div className="rd-ai-panel-header">
+          <IconRobot size={14} />
+          <span>{t("aiSummary")}</span>
+        </div>
         <Box className="markdown-content">
           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
             {summaryText}
           </ReactMarkdown>
         </Box>
-      </Paper>
+      </div>
     ) : null;
 
   const renderOriginalContent = () => (
@@ -197,10 +187,10 @@ export function ArticleReader({ article }: Props) {
 
   const renderTranslationPanel = () => (
     <>
-      <Group gap="xs" mb="xs">
-        <IconLanguage size={16} />
-        <Text fw={600} size="sm">{t("chineseTranslation")}</Text>
-      </Group>
+      <div className="rd-ai-panel-header" style={{ marginBottom: 12 }}>
+        <IconLanguage size={14} />
+        <span>{t("chineseTranslation")}</span>
+      </div>
       <Box className="markdown-content">
         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
           {translationText}
@@ -212,133 +202,130 @@ export function ArticleReader({ article }: Props) {
   const renderContentArea = () => {
     if (layoutMode === "side-by-side" && showTranslation && translationText) {
       return (
-        <Group wrap="nowrap" align="flex-start" gap={0} style={{ flex: 1 }}>
+        <div style={{ display: "flex", gap: 0, flex: 1 }}>
           <Box style={{ flex: 1, minWidth: 0 }} pr="md">
-            <Title order={2} mb="xs">
-              {article.title}
-            </Title>
+            <h1 className="rd-reader-title">{article.title}</h1>
             {renderArticleMeta()}
             {renderSummary()}
-            {article.content ? (
-              renderOriginalContent()
-            ) : null}
+            {article.content ? renderOriginalContent() : null}
           </Box>
           <Divider orientation="vertical" />
           <Box style={{ flex: 1, minWidth: 0 }} pl="md">
-            <Title order={2} mb="xs" c="dimmed">
+            <h1
+              className="rd-reader-title"
+              style={{ color: "var(--rd-text-secondary)" }}
+            >
               {t("chineseTranslation")}
-            </Title>
+            </h1>
             {renderTranslationPanel()}
           </Box>
-        </Group>
+        </div>
       );
     }
 
     return (
-      <Box maw={800}>
-        <Title order={2} mb="xs">
-          {article.title}
-        </Title>
+      <div className="rd-reader-body">
+        <h1 className="rd-reader-title">{article.title}</h1>
         {renderArticleMeta()}
         {renderSummary()}
-        {layoutMode === "replace" && showTranslation && translationText ? (
-          renderTranslationPanel()
-        ) : article.content ? (
-          renderOriginalContent()
-        ) : null}
-      </Box>
+        {layoutMode === "replace" && showTranslation && translationText
+          ? renderTranslationPanel()
+          : article.content
+            ? renderOriginalContent()
+            : null}
+      </div>
     );
   };
 
   return (
-    <Stack h="100%" gap={0}>
-      {/* Action Bar */}
-      <Paper px="md" py="sm" radius={0}>
-        <Group justify="space-between">
-          <Group gap={4}>
-            <Tooltip label={article.is_read ? t("markUnread") : t("markRead")}>
+    <div className="rd-reader">
+      {/* Toolbar */}
+      <div className="rd-reader-toolbar">
+        <div className="rd-reader-toolbar-group">
+          <Tooltip label={article.is_read ? t("markUnread") : t("markRead")}>
+            <ActionIcon
+              variant="subtle"
+              size="sm"
+              onClick={() => markReadMutation.mutate()}
+            >
+              {article.is_read ? (
+                <IconEyeOff size={15} />
+              ) : (
+                <IconEye size={15} />
+              )}
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label={t("toggleStar")}>
+            <ActionIcon
+              variant="subtle"
+              size="sm"
+              color="yellow"
+              onClick={() => toggleStarMutation.mutate()}
+            >
+              {article.starred ? (
+                <IconStarFilled size={15} />
+              ) : (
+                <IconStar size={15} />
+              )}
+            </ActionIcon>
+          </Tooltip>
+          {article.link && (
+            <Tooltip label={t("openInBrowser")}>
               <ActionIcon
                 variant="subtle"
                 size="sm"
-                onClick={() => markReadMutation.mutate()}
+                onClick={handleOpenInBrowser}
               >
-                {article.is_read ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+                <IconExternalLink size={15} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label={t("toggleStar")}>
+          )}
+        </div>
+
+        <div className="rd-reader-toolbar-group">
+          <Button
+            variant="light"
+            size="compact-sm"
+            leftSection={<IconLanguage size={13} />}
+            onClick={handleTranslateClick}
+            loading={translateMutation.isPending}
+          >
+            {showTranslation ? t("hideTranslation") : t("translate")}
+          </Button>
+          {showTranslation && translationText && (
+            <Tooltip label={t("reTranslate")}>
               <ActionIcon
-                variant="subtle"
+                variant="light"
                 size="sm"
-                color="yellow"
-                onClick={() => toggleStarMutation.mutate()}
+                onClick={() => translateMutation.mutate({ force: true })}
+                loading={translateMutation.isPending}
               >
-                {article.starred ? (
-                  <IconStarFilled size={16} />
-                ) : (
-                  <IconStar size={16} />
-                )}
+                <IconRefresh size={13} />
               </ActionIcon>
             </Tooltip>
-            {article.link && (
-              <Tooltip label={t("openInBrowser")}>
-                <ActionIcon
-                  variant="subtle"
-                  size="sm"
-                  onClick={handleOpenInBrowser}
-                >
-                  <IconExternalLink size={16} />
-                </ActionIcon>
-              </Tooltip>
-            )}
-          </Group>
+          )}
+          <Button
+            variant="light"
+            size="compact-sm"
+            leftSection={<IconRobot size={13} />}
+            onClick={() => {
+              if (summaryText) {
+                setShowSummary(!showSummary);
+              } else {
+                summarizeMutation.mutate();
+              }
+            }}
+            loading={summarizeMutation.isPending}
+          >
+            {showSummary ? t("hideSummary") : t("summarize")}
+          </Button>
+        </div>
+      </div>
 
-          <Group gap={4}>
-            <Button
-              variant="light"
-              size="compact-sm"
-              leftSection={<IconLanguage size={14} />}
-              onClick={handleTranslateClick}
-              loading={translateMutation.isPending}
-            >
-              {showTranslation ? t("hideTranslation") : t("translate")}
-            </Button>
-            {showTranslation && translationText && (
-              <Tooltip label={t("reTranslate")}>
-                <ActionIcon
-                  variant="light"
-                  size="sm"
-                  onClick={() => translateMutation.mutate({ force: true })}
-                  loading={translateMutation.isPending}
-                >
-                  <IconRefresh size={14} />
-                </ActionIcon>
-              </Tooltip>
-            )}
-            <Button
-              variant="light"
-              size="compact-sm"
-              leftSection={<IconRobot size={14} />}
-              onClick={() => {
-                if (summaryText) {
-                  setShowSummary(!showSummary);
-                } else {
-                  summarizeMutation.mutate();
-                }
-              }}
-              loading={summarizeMutation.isPending}
-            >
-              {showSummary ? t("hideSummary") : t("summarize")}
-            </Button>
-          </Group>
-        </Group>
-      </Paper>
-
-      <Divider />
-
-      {/* Article Content */}
-      <ScrollArea style={{ flex: 1 }} px="xl" py="md">
-        {renderContentArea()}
-      </ScrollArea>
-    </Stack>
+      {/* Content */}
+      <div className="rd-reader-scroll">
+        <div className="rd-reader-content">{renderContentArea()}</div>
+      </div>
+    </div>
   );
 }

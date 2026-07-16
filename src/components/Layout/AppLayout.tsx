@@ -1,7 +1,7 @@
-import { AppShell, Group, Title, ActionIcon, Tooltip } from "@mantine/core";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useHotkeys } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
+import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconSettings, IconRss } from "@tabler/icons-react";
 import { FeedList } from "../FeedList/FeedList";
 
@@ -12,32 +12,26 @@ export function AppLayout() {
   useHotkeys([["mod+,", () => navigate("/settings")]]);
 
   return (
-    <AppShell
-      navbar={{ width: 260, breakpoint: 0 }}
-      header={{ height: 50 }}
-      padding="md"
-    >
-      <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
-          <Group gap="xs">
-            <IconRss size={22} color="var(--mantine-color-orange-6)" />
-            <Title order={4}>{t("appTitle")}</Title>
-          </Group>
-          <Tooltip label={t("settingsTooltip")}>
-            <ActionIcon variant="subtle" onClick={() => navigate("/settings")}>
-              <IconSettings size={18} />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
-      </AppShell.Header>
-
-      <AppShell.Navbar p="xs">
-        <FeedList />
-      </AppShell.Navbar>
-
-      <AppShell.Main>
-        <Outlet />
-      </AppShell.Main>
-    </AppShell>
+    <div className="rd-shell">
+      <header className="rd-header">
+        <div className="rd-header-title">
+          <IconRss className="rd-header-logo" />
+          <span>{t("appTitle")}</span>
+        </div>
+        <Tooltip label={t("settingsTooltip")}>
+          <ActionIcon size="sm" onClick={() => navigate("/settings")}>
+            <IconSettings size={16} />
+          </ActionIcon>
+        </Tooltip>
+      </header>
+      <div className="rd-body">
+        <nav className="rd-sidebar-panel">
+          <FeedList />
+        </nav>
+        <main className="rd-main">
+          <Outlet />
+        </main>
+      </div>
+    </div>
   );
 }

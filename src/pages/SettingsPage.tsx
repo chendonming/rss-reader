@@ -1,18 +1,22 @@
 import { useState, useEffect } from "react";
 import {
   Stack,
-  Title,
   TextInput,
   Select,
   Button,
-  Paper,
   Text,
-  Group,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
 import { notifications } from "@mantine/notifications";
-import { getAiSettings, saveAiSettings, getLanguage, setLanguage, getTranslationLayout, setTranslationLayout } from "../api";
+import {
+  getAiSettings,
+  saveAiSettings,
+  getLanguage,
+  setLanguage,
+  getTranslationLayout,
+  setTranslationLayout,
+} from "../api";
 import type { AiConfig, TranslationLayout } from "../types";
 import { log } from "../utils/logger";
 
@@ -40,21 +44,25 @@ export default function SettingsPage() {
       })
       .finally(() => setLoading(false));
 
-    getLanguage().then((savedLang) => {
-      if (savedLang) {
-        setLang(savedLang);
-      }
-    }).catch((e) => {
-      log.warn("getLanguage failed, using current i18n language:", e);
-    });
+    getLanguage()
+      .then((savedLang) => {
+        if (savedLang) {
+          setLang(savedLang);
+        }
+      })
+      .catch((e) => {
+        log.warn("getLanguage failed, using current i18n language:", e);
+      });
 
-    getTranslationLayout().then((layout) => {
-      if (layout === "replace" || layout === "side-by-side") {
-        setLayoutMode(layout);
-      }
-    }).catch((e) => {
-      log.warn("getTranslationLayout failed, using default:", e);
-    });
+    getTranslationLayout()
+      .then((layout) => {
+        if (layout === "replace" || layout === "side-by-side") {
+          setLayoutMode(layout);
+        }
+      })
+      .catch((e) => {
+        log.warn("getTranslationLayout failed, using default:", e);
+      });
   }, []);
 
   const handleSave = async () => {
@@ -88,7 +96,9 @@ export default function SettingsPage() {
     if (!value) return;
     const layout = value as TranslationLayout;
     setLayoutMode(layout);
-    setTranslationLayout(layout).catch((e) => log.warn("setTranslationLayout failed:", e));
+    setTranslationLayout(layout).catch((e) =>
+      log.warn("setTranslationLayout failed:", e)
+    );
   };
 
   if (loading) {
@@ -102,16 +112,12 @@ export default function SettingsPage() {
   const isAnthropic = config.provider === "anthropic";
 
   return (
-    <Stack p="xl" maw={600}>
-      <Title order={3}>{t("title")}</Title>
+    <div className="rd-settings">
+      <h1 className="rd-settings-title">{t("title")}</h1>
 
-      <Paper withBorder p="md" mt="md">
-        <Title order={5} mb="md">
-          {t("aiSettings")}
-        </Title>
-        <Text size="sm" c="dimmed" mb="lg">
-          {t("aiDescription")}
-        </Text>
+      <div className="rd-settings-section">
+        <div className="rd-settings-section-title">{t("aiSettings")}</div>
+        <div className="rd-settings-section-desc">{t("aiDescription")}</div>
 
         <Stack>
           <Select
@@ -130,7 +136,10 @@ export default function SettingsPage() {
                   v === "anthropic"
                     ? "https://api.anthropic.com"
                     : "https://api.openai.com/v1",
-                model: v === "anthropic" ? "claude-sonnet-4-20250514" : "gpt-4o-mini",
+                model:
+                  v === "anthropic"
+                    ? "claude-sonnet-4-20250514"
+                    : "gpt-4o-mini",
               }));
             }}
           />
@@ -138,9 +147,7 @@ export default function SettingsPage() {
           <TextInput
             label={t("apiKey")}
             type="password"
-            placeholder={
-              isAnthropic ? "sk-ant-..." : "sk-..."
-            }
+            placeholder={isAnthropic ? "sk-ant-..." : "sk-..."}
             value={config.api_key}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const v = e.currentTarget.value;
@@ -174,7 +181,9 @@ export default function SettingsPage() {
                 ? t("modelAnthropicDesc")
                 : t("modelOpenaiDesc")
             }
-            placeholder={isAnthropic ? "claude-sonnet-4-20250514" : "gpt-4o-mini"}
+            placeholder={
+              isAnthropic ? "claude-sonnet-4-20250514" : "gpt-4o-mini"
+            }
             value={config.model}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const v = e.currentTarget.value;
@@ -186,15 +195,13 @@ export default function SettingsPage() {
             {tc("save")}
           </Button>
         </Stack>
-      </Paper>
+      </div>
 
-      <Paper withBorder p="md">
-        <Title order={5} mb="md">
-          {t("language")}
-        </Title>
-        <Text size="sm" c="dimmed" mb="lg">
+      <div className="rd-settings-section">
+        <div className="rd-settings-section-title">{t("language")}</div>
+        <div className="rd-settings-section-desc">
           {t("languageDescription")}
-        </Text>
+        </div>
         <Select
           data={[
             { value: "zh-CN", label: t("chinese") },
@@ -203,15 +210,15 @@ export default function SettingsPage() {
           value={lang}
           onChange={handleLanguageChange}
         />
-      </Paper>
+      </div>
 
-      <Paper withBorder p="md">
-        <Title order={5} mb="md">
+      <div className="rd-settings-section">
+        <div className="rd-settings-section-title">
           {t("translationLayout")}
-        </Title>
-        <Text size="sm" c="dimmed" mb="lg">
+        </div>
+        <div className="rd-settings-section-desc">
           {t("translationLayoutDesc")}
-        </Text>
+        </div>
         <Select
           data={[
             { value: "replace", label: t("replaceMode") },
@@ -220,51 +227,39 @@ export default function SettingsPage() {
           value={layoutMode}
           onChange={handleLayoutChange}
         />
-      </Paper>
+      </div>
 
-      <Paper withBorder p="md">
-        <Title order={5} mb="md">
+      <div className="rd-settings-section">
+        <div className="rd-settings-section-title">
           {t("keyboardShortcuts")}
-        </Title>
-        <Stack gap="xs">
-          <Group justify="space-between">
-            <Text size="sm">j / k</Text>
-            <Text size="sm" c="dimmed">
-              {t("navigateArticles")}
-            </Text>
-          </Group>
-          <Group justify="space-between">
-            <Text size="sm">s</Text>
-            <Text size="sm" c="dimmed">
-              {t("starUnstar")}
-            </Text>
-          </Group>
-          <Group justify="space-between">
-            <Text size="sm">m</Text>
-            <Text size="sm" c="dimmed">
-              {t("markReadUnread")}
-            </Text>
-          </Group>
-          <Group justify="space-between">
-            <Text size="sm">r</Text>
-            <Text size="sm" c="dimmed">
-              {t("refreshFeeds")}
-            </Text>
-          </Group>
-          <Group justify="space-between">
-            <Text size="sm">o</Text>
-            <Text size="sm" c="dimmed">
-              {t("openInBrowser")}
-            </Text>
-          </Group>
-          <Group justify="space-between">
-            <Text size="sm">Ctrl+,</Text>
-            <Text size="sm" c="dimmed">
-              {t("openSettings")}
-            </Text>
-          </Group>
-        </Stack>
-      </Paper>
-    </Stack>
+        </div>
+        <div className="rd-settings-shortcuts">
+          <div className="rd-settings-shortcut-row">
+            <span>j / k</span>
+            <kbd>{t("navigateArticles")}</kbd>
+          </div>
+          <div className="rd-settings-shortcut-row">
+            <span>s</span>
+            <kbd>{t("starUnstar")}</kbd>
+          </div>
+          <div className="rd-settings-shortcut-row">
+            <span>m</span>
+            <kbd>{t("markReadUnread")}</kbd>
+          </div>
+          <div className="rd-settings-shortcut-row">
+            <span>r</span>
+            <kbd>{t("refreshFeeds")}</kbd>
+          </div>
+          <div className="rd-settings-shortcut-row">
+            <span>o</span>
+            <kbd>{t("openInBrowser")}</kbd>
+          </div>
+          <div className="rd-settings-shortcut-row">
+            <span>Ctrl+,</span>
+            <kbd>{t("openSettings")}</kbd>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
