@@ -1,0 +1,20 @@
+{
+  "error": "Error",
+  "refreshed": "Refreshed",
+  "upToDate": "Up to date",
+  "noNewArticles": "No new articles",
+  "fetchedNew": "Fetched {{count}} new articles",
+  "feedAdded": "Feed added",
+  "feedAddedDesc": "The feed has been added successfully.",
+  "markedAllRead": "Marked all as read",
+  "feedDeleted": "Feed deleted",
+  "saved": "Saved",
+  "aiSettingsSaved": "AI settings saved successfully.",
+  "translationFailed": "Translation failed",
+  "summaryFailed": "Summary failed",
+  "refreshFailed": "Refresh failed",
+  "loading": "Loading...",
+  "save": "Save Settings",
+  "add": "Add",
+  "failedToLoadArticles": "Failed to load articles"
+}

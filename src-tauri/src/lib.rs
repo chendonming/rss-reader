@@ -11,6 +11,7 @@ use tauri::Manager;
 pub struct AppState {
     pub db: Mutex<Database>,
     pub ai_config: Mutex<AiConfig>,
+    pub locale: Mutex<String>,
     pub app_data_dir: Mutex<PathBuf>,
 }
 
@@ -21,6 +22,7 @@ pub fn run() {
         .manage(AppState {
             db: Mutex::new(Database::new()),
             ai_config: Mutex::new(AiConfig::default()),
+            locale: Mutex::new(String::new()),
             app_data_dir: Mutex::new(PathBuf::new()),
         })
         .setup(|app| {
@@ -44,6 +46,16 @@ pub fn run() {
                 if let Ok(config) = serde_json::from_str::<AiConfig>(&content) {
                     let mut ai_cfg = state.ai_config.lock().unwrap();
                     *ai_cfg = config;
+                }
+            }
+
+            // Load saved locale
+            let locale_path = app_dir.join("language.json");
+            if let Ok(content) = std::fs::read_to_string(&locale_path) {
+                let lang = content.trim().to_string();
+                if !lang.is_empty() {
+                    let mut locale = state.locale.lock().unwrap();
+                    *locale = lang;
                 }
             }
 
@@ -82,6 +94,8 @@ pub fn run() {
             commands::summarize_article,
             commands::get_ai_settings,
             commands::save_ai_settings,
+            commands::get_language,
+            commands::set_language,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

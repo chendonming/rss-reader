@@ -6,6 +6,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addFeed } from "../../api";
 import { notifications } from "@mantine/notifications";
@@ -16,6 +17,8 @@ interface Props {
 }
 
 export function AddFeedModal({ opened, onClose }: Props) {
+  const { t } = useTranslation("layout");
+  const { t: tc } = useTranslation("common");
   const [url, setUrl] = useState("");
   const queryClient = useQueryClient();
 
@@ -24,8 +27,8 @@ export function AddFeedModal({ opened, onClose }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["feeds"] });
       notifications.show({
-        title: "Feed added",
-        message: "The feed has been added successfully.",
+        title: tc("feedAdded"),
+        message: tc("feedAddedDesc"),
         color: "green",
       });
       setUrl("");
@@ -33,7 +36,7 @@ export function AddFeedModal({ opened, onClose }: Props) {
     },
     onError: (error: Error) => {
       notifications.show({
-        title: "Error",
+        title: tc("error"),
         message: error.message,
         color: "red",
       });
@@ -48,12 +51,12 @@ export function AddFeedModal({ opened, onClose }: Props) {
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Add Feed" centered>
+    <Modal opened={opened} onClose={onClose} title={t("addFeedTitle")} centered>
       <form onSubmit={handleSubmit}>
         <Stack>
           <TextInput
-            label="Feed URL"
-            placeholder="https://example.com/rss"
+            label={t("feedUrl")}
+            placeholder={t("feedUrlPlaceholder")}
             value={url}
             onChange={(e) => setUrl(e.currentTarget.value)}
             required
@@ -61,14 +64,14 @@ export function AddFeedModal({ opened, onClose }: Props) {
             data-autofocus
           />
           <Text size="xs" c="dimmed">
-            Supports RSS 2.0, RSS 1.0, and Atom feeds.
+            {t("feedFormats")}
           </Text>
           <Button
             type="submit"
             loading={mutation.isPending}
             fullWidth
           >
-            Add
+            {tc("add")}
           </Button>
         </Stack>
       </form>

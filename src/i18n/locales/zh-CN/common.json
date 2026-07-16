@@ -1,0 +1,20 @@
+{
+  "error": "错误",
+  "refreshed": "刷新成功",
+  "upToDate": "已是最新",
+  "noNewArticles": "没有新文章",
+  "fetchedNew": "获取到 {{count}} 篇新文章",
+  "feedAdded": "订阅源已添加",
+  "feedAddedDesc": "订阅源添加成功。",
+  "markedAllRead": "全部标记为已读",
+  "feedDeleted": "订阅源已删除",
+  "saved": "已保存",
+  "aiSettingsSaved": "AI 设置保存成功。",
+  "translationFailed": "翻译失败",
+  "summaryFailed": "摘要失败",
+  "refreshFailed": "刷新失败",
+  "loading": "加载中...",
+  "save": "保存设置",
+  "add": "添加",
+  "failedToLoadArticles": "加载文章失败"
+}

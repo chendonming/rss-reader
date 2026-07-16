@@ -166,6 +166,29 @@ pub fn get_ai_settings(state: State<'_, AppState>) -> Result<AiConfig, String> {
 }
 
 #[tauri::command]
+pub fn get_language(state: State<'_, AppState>) -> Result<String, String> {
+    let locale = state.locale.lock().map_err(|e| e.to_string())?;
+    Ok(locale.clone())
+}
+
+#[tauri::command]
+pub fn set_language(state: State<'_, AppState>, language: String) -> Result<(), String> {
+    let mut locale = state.locale.lock().map_err(|e| e.to_string())?;
+    *locale = language.clone();
+
+    // Persist to disk
+    let app_dir = state
+        .app_data_dir
+        .lock()
+        .map_err(|e| e.to_string())?
+        .clone();
+    let locale_path = app_dir.join("language.json");
+    std::fs::write(locale_path, language).ok();
+
+    Ok(())
+}
+
+#[tauri::command]
 pub fn save_ai_settings(state: State<'_, AppState>, config: AiConfig) -> Result<(), String> {
     let mut ai_config = state.ai_config.lock().map_err(|e| e.to_string())?;
     *ai_config = config.clone();

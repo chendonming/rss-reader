@@ -17,6 +17,7 @@ import {
 } from "@tabler/icons-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { getFeeds, refreshAll } from "../../api";
 import type { Feed } from "../../types";
 import { AddFeedModal } from "./AddFeedModal";
@@ -24,6 +25,8 @@ import { useState } from "react";
 import { notifications } from "@mantine/notifications";
 
 export function FeedList() {
+  const { t } = useTranslation("layout");
+  const { t: tc } = useTranslation("common");
   const navigate = useNavigate();
   const location = useLocation();
   const { feedId } = useParams();
@@ -46,19 +49,19 @@ export function FeedList() {
       queryClient.invalidateQueries({ queryKey: ["articles"] });
       if (count > 0) {
         notifications.show({
-          title: "Refreshed",
-          message: `Fetched ${count} new articles`,
+          title: tc("refreshed"),
+          message: tc("fetchedNew", { count }),
           color: "green",
         });
       } else {
         notifications.show({
-          title: "Up to date",
-          message: "No new articles",
+          title: tc("upToDate"),
+          message: tc("noNewArticles"),
         });
       }
     } catch (e) {
       notifications.show({
-        title: "Error",
+        title: tc("error"),
         message: String(e),
         color: "red",
       });
@@ -75,15 +78,15 @@ export function FeedList() {
       <Stack h="100%" gap={0}>
         <Group px="sm" pb="xs" justify="space-between">
           <Text size="sm" c="dimmed" fw={500}>
-            Feeds
+            {t("feeds")}
           </Text>
           <Group gap={4}>
-            <Tooltip label="Refresh all">
+            <Tooltip label={t("refreshAll")}>
               <ActionIcon variant="subtle" size="sm" onClick={handleRefreshAll}>
                 <IconRefresh size={14} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Add feed">
+            <Tooltip label={t("addFeed")}>
               <ActionIcon
                 variant="subtle"
                 size="sm"
@@ -98,7 +101,7 @@ export function FeedList() {
         <NavLink
           label={
             <Group gap="xs" wrap="nowrap">
-              <Text size="sm">All Articles</Text>
+              <Text size="sm">{t("allArticles")}</Text>
               {totalUnread > 0 && (
                 <Badge size="xs" variant="filled" color="gray">
                   {totalUnread}
@@ -113,7 +116,7 @@ export function FeedList() {
         />
 
         <NavLink
-          label="Starred"
+          label={t("starred")}
           leftSection={<IconStar size={16} />}
           active={isActive("/starred")}
           onClick={() => navigate("/starred")}
@@ -134,7 +137,7 @@ export function FeedList() {
           )}
           {isError && (
             <Text size="sm" c="dimmed" ta="center" py="xl">
-              Failed to load feeds
+              {t("failedToLoadFeeds")}
             </Text>
           )}
           {feeds?.map((feed: Feed) => (
@@ -160,7 +163,7 @@ export function FeedList() {
           ))}
           {feeds?.length === 0 && !isLoading && (
             <Text size="sm" c="dimmed" ta="center" py="xl">
-              No feeds yet. Click + to add one.
+              {t("noFeedsYet")}
             </Text>
           )}
         </Box>

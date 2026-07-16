@@ -66,3 +66,11 @@ export async function getAiSettings(): Promise<AiConfig> {
 export async function saveAiSettings(config: AiConfig): Promise<void> {
   return invoke("save_ai_settings", { config });
 }
+
+export async function getLanguage(): Promise<string> {
+  return invoke("get_language");
+}
+
+export async function setLanguage(language: string): Promise<void> {
+  return invoke("set_language", { language });
+}

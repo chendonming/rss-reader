@@ -1,0 +1,17 @@
+{
+  "markRead": "标记已读",
+  "markUnread": "标记未读",
+  "toggleStar": "切换星标",
+  "openInBrowser": "在浏览器中打开",
+  "translate": "翻译",
+  "hideTranslation": "隐藏翻译",
+  "summarize": "AI 摘要",
+  "hideSummary": "隐藏摘要",
+  "aiSummary": "AI 摘要",
+  "translation": "翻译",
+  "chineseTranslation": "中文翻译",
+  "articles": "文章 ({{count}})",
+  "starred": "星标",
+  "selectArticle": "选择一篇文章阅读",
+  "noArticlesYet": "暂无文章，请添加订阅源或刷新。"
+}

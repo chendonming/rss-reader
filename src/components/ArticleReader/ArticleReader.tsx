@@ -23,6 +23,7 @@ import {
   IconEyeOff,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import DOMPurify from "dompurify";
 import {
   markRead,
@@ -38,6 +39,8 @@ interface Props {
 }
 
 export function ArticleReader({ article }: Props) {
+  const { t, i18n } = useTranslation("reader");
+  const { t: tc } = useTranslation("common");
   const [showTranslation, setShowTranslation] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [translationText, setTranslationText] = useState<string | null>(
@@ -79,7 +82,7 @@ export function ArticleReader({ article }: Props) {
     },
     onError: (e: Error) => {
       notifications.show({
-        title: "Translation failed",
+        title: tc("translationFailed"),
         message: e.message,
         color: "red",
       });
@@ -94,7 +97,7 @@ export function ArticleReader({ article }: Props) {
     },
     onError: (e: Error) => {
       notifications.show({
-        title: "Summary failed",
+        title: tc("summaryFailed"),
         message: e.message,
         color: "red",
       });
@@ -113,7 +116,7 @@ export function ArticleReader({ article }: Props) {
       <Paper px="md" py="sm" radius={0}>
         <Group justify="space-between">
           <Group gap={4}>
-            <Tooltip label={article.is_read ? "Mark unread" : "Mark read"}>
+            <Tooltip label={article.is_read ? t("markUnread") : t("markRead")}>
               <ActionIcon
                 variant="subtle"
                 size="sm"
@@ -122,7 +125,7 @@ export function ArticleReader({ article }: Props) {
                 {article.is_read ? <IconEyeOff size={16} /> : <IconEye size={16} />}
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Toggle star">
+            <Tooltip label={t("toggleStar")}>
               <ActionIcon
                 variant="subtle"
                 size="sm"
@@ -137,7 +140,7 @@ export function ArticleReader({ article }: Props) {
               </ActionIcon>
             </Tooltip>
             {article.link && (
-              <Tooltip label="Open in browser">
+              <Tooltip label={t("openInBrowser")}>
                 <ActionIcon
                   variant="subtle"
                   size="sm"
@@ -163,7 +166,7 @@ export function ArticleReader({ article }: Props) {
               }}
               loading={translateMutation.isPending}
             >
-              {showTranslation ? "Hide Translation" : "Translate"}
+              {showTranslation ? t("hideTranslation") : t("translate")}
             </Button>
             <Button
               variant="light"
@@ -178,7 +181,7 @@ export function ArticleReader({ article }: Props) {
               }}
               loading={summarizeMutation.isPending}
             >
-              {showSummary ? "Hide Summary" : "Summarize"}
+              {showSummary ? t("hideSummary") : t("summarize")}
             </Button>
           </Group>
         </Group>
@@ -214,7 +217,7 @@ export function ArticleReader({ article }: Props) {
                   ·
                 </Text>
                 <Text size="sm" c="dimmed">
-                  {new Date(article.pub_date).toLocaleDateString("zh-CN", {
+                  {new Date(article.pub_date).toLocaleDateString(i18n.language, {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
@@ -230,7 +233,7 @@ export function ArticleReader({ article }: Props) {
               <Group gap="xs" mb="xs">
                 <IconRobot size={16} />
                 <Text fw={600} size="sm">
-                  AI Summary
+                  {t("aiSummary")}
                 </Text>
               </Group>
               <Text size="sm">{summaryText}</Text>
@@ -246,12 +249,12 @@ export function ArticleReader({ article }: Props) {
           {/* Translation */}
           {showTranslation && translationText && (
             <>
-              <Divider my="lg" label="Translation" labelPosition="center" />
+              <Divider my="lg" label={t("translation")} labelPosition="center" />
               <Paper p="md" withBorder bg="var(--mantine-color-gray-0)">
                 <Group gap="xs" mb="xs">
                   <IconLanguage size={16} />
                   <Text fw={600} size="sm">
-                    Chinese Translation
+                    {t("chineseTranslation")}
                   </Text>
                 </Group>
                 <Text style={{ whiteSpace: "pre-wrap" }}>

@@ -1,0 +1,17 @@
+{
+  "appTitle": "RSS 阅读器",
+  "settingsTooltip": "设置 (Ctrl+,)",
+  "feeds": "订阅源",
+  "allArticles": "全部文章",
+  "starred": "星标",
+  "refreshAll": "刷新全部",
+  "addFeed": "添加订阅源",
+  "noFeedsYet": "还没有订阅源，点击 + 添加。",
+  "failedToLoadFeeds": "加载订阅源失败",
+  "addFeedTitle": "添加订阅源",
+  "feedUrl": "订阅源地址",
+  "feedUrlPlaceholder": "https://example.com/rss",
+  "feedFormats": "支持 RSS 2.0、RSS 1.0 和 Atom 订阅源。",
+  "markAllRead": "全部标记已读",
+  "deleteFeed": "删除订阅源"
+}

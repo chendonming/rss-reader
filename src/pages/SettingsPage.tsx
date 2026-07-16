@@ -9,17 +9,22 @@ import {
   Text,
   Group,
 } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 import { notifications } from "@mantine/notifications";
-import { getAiSettings, saveAiSettings } from "../api";
+import { getAiSettings, saveAiSettings, getLanguage, setLanguage } from "../api";
 import type { AiConfig } from "../types";
 
 export default function SettingsPage() {
+  const { t } = useTranslation("settings");
+  const { t: tc } = useTranslation("common");
   const [config, setConfig] = useState<AiConfig>({
     provider: "openai",
     api_key: "",
     base_url: "https://api.openai.com/v1",
     model: "gpt-4o-mini",
   });
+  const [lang, setLang] = useState(i18n.language);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -32,6 +37,14 @@ export default function SettingsPage() {
         // Use defaults
       })
       .finally(() => setLoading(false));
+
+    getLanguage().then((savedLang) => {
+      if (savedLang) {
+        setLang(savedLang);
+      }
+    }).catch(() => {
+      // Use current i18n language
+    });
   }, []);
 
   const handleSave = async () => {
@@ -39,13 +52,13 @@ export default function SettingsPage() {
     try {
       await saveAiSettings(config);
       notifications.show({
-        title: "Saved",
-        message: "AI settings saved successfully.",
+        title: tc("saved"),
+        message: tc("aiSettingsSaved"),
         color: "green",
       });
     } catch (e) {
       notifications.show({
-        title: "Error",
+        title: tc("error"),
         message: String(e),
         color: "red",
       });
@@ -54,10 +67,17 @@ export default function SettingsPage() {
     }
   };
 
+  const handleLanguageChange = async (value: string | null) => {
+    if (!value) return;
+    setLang(value);
+    await i18n.changeLanguage(value);
+    setLanguage(value).catch(() => {});
+  };
+
   if (loading) {
     return (
       <Stack p="xl" align="center">
-        <Text c="dimmed">Loading...</Text>
+        <Text c="dimmed">{tc("loading")}</Text>
       </Stack>
     );
   }
@@ -66,22 +86,22 @@ export default function SettingsPage() {
 
   return (
     <Stack p="xl" maw={600}>
-      <Title order={3}>Settings</Title>
+      <Title order={3}>{t("title")}</Title>
 
       <Paper withBorder p="md" mt="md">
         <Title order={5} mb="md">
-          AI Settings
+          {t("aiSettings")}
         </Title>
         <Text size="sm" c="dimmed" mb="lg">
-          Configure AI providers for article translation and summarization.
+          {t("aiDescription")}
         </Text>
 
         <Stack>
           <Select
-            label="AI Provider"
+            label={t("aiProvider")}
             data={[
-              { value: "openai", label: "OpenAI Compatible" },
-              { value: "anthropic", label: "Anthropic" },
+              { value: "openai", label: t("openai") },
+              { value: "anthropic", label: t("anthropic") },
             ]}
             value={config.provider}
             onChange={(v: string | null) => {
@@ -99,7 +119,7 @@ export default function SettingsPage() {
           />
 
           <TextInput
-            label="API Key"
+            label={t("apiKey")}
             type="password"
             placeholder={
               isAnthropic ? "sk-ant-..." : "sk-..."
@@ -111,11 +131,11 @@ export default function SettingsPage() {
           />
 
           <TextInput
-            label="Base URL"
+            label={t("baseUrl")}
             description={
               isAnthropic
-                ? "Anthropic API base URL"
-                : "OpenAI-compatible API base URL (e.g., https://api.openai.com/v1)"
+                ? t("baseUrlAnthropicDesc")
+                : t("baseUrlOpenaiDesc")
             }
             placeholder={
               isAnthropic
@@ -129,11 +149,11 @@ export default function SettingsPage() {
           />
 
           <TextInput
-            label="Model"
+            label={t("model")}
             description={
               isAnthropic
-                ? "e.g., claude-sonnet-4-20250514, claude-haiku-3-5-20241022"
-                : "e.g., gpt-4o-mini, gpt-4o, deepseek-chat"
+                ? t("modelAnthropicDesc")
+                : t("modelOpenaiDesc")
             }
             placeholder={isAnthropic ? "claude-sonnet-4-20250514" : "gpt-4o-mini"}
             value={config.model}
@@ -143,50 +163,67 @@ export default function SettingsPage() {
           />
 
           <Button onClick={handleSave} loading={saving} mt="md">
-            Save Settings
+            {tc("save")}
           </Button>
         </Stack>
       </Paper>
 
       <Paper withBorder p="md">
         <Title order={5} mb="md">
-          Keyboard Shortcuts
+          {t("language")}
+        </Title>
+        <Text size="sm" c="dimmed" mb="lg">
+          {t("languageDescription")}
+        </Text>
+        <Select
+          data={[
+            { value: "zh-CN", label: t("chinese") },
+            { value: "en", label: t("english") },
+          ]}
+          value={lang}
+          onChange={handleLanguageChange}
+        />
+      </Paper>
+
+      <Paper withBorder p="md">
+        <Title order={5} mb="md">
+          {t("keyboardShortcuts")}
         </Title>
         <Stack gap="xs">
           <Group justify="space-between">
             <Text size="sm">j / k</Text>
             <Text size="sm" c="dimmed">
-              Navigate articles up/down
+              {t("navigateArticles")}
             </Text>
           </Group>
           <Group justify="space-between">
             <Text size="sm">s</Text>
             <Text size="sm" c="dimmed">
-              Star / unstar article
+              {t("starUnstar")}
             </Text>
           </Group>
           <Group justify="space-between">
             <Text size="sm">m</Text>
             <Text size="sm" c="dimmed">
-              Mark read / unread
+              {t("markReadUnread")}
             </Text>
           </Group>
           <Group justify="space-between">
             <Text size="sm">r</Text>
             <Text size="sm" c="dimmed">
-              Refresh feeds
+              {t("refreshFeeds")}
             </Text>
           </Group>
           <Group justify="space-between">
             <Text size="sm">o</Text>
             <Text size="sm" c="dimmed">
-              Open in browser
+              {t("openInBrowser")}
             </Text>
           </Group>
           <Group justify="space-between">
             <Text size="sm">Ctrl+,</Text>
             <Text size="sm" c="dimmed">
-              Open settings
+              {t("openSettings")}
             </Text>
           </Group>
         </Stack>

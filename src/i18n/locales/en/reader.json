@@ -1,0 +1,17 @@
+{
+  "markRead": "Mark read",
+  "markUnread": "Mark unread",
+  "toggleStar": "Toggle star",
+  "openInBrowser": "Open in browser",
+  "translate": "Translate",
+  "hideTranslation": "Hide Translation",
+  "summarize": "Summarize",
+  "hideSummary": "Hide Summary",
+  "aiSummary": "AI Summary",
+  "translation": "Translation",
+  "chineseTranslation": "Chinese Translation",
+  "articles": "Articles ({{count}})",
+  "starred": "Starred",
+  "selectArticle": "Select an article to read",
+  "noArticlesYet": "No articles yet. Add a feed or refresh."
+}

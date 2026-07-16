@@ -19,6 +19,7 @@ import {
   IconEyeOff,
 } from "@tabler/icons-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useParams, useLocation } from "react-router-dom";
 import { useHotkeys } from "@mantine/hooks";
 import { getArticles, markAllRead, toggleStar, deleteFeed, refreshFeed, markRead, refreshAll } from "../api";
@@ -27,6 +28,9 @@ import { ArticleReader } from "../components/ArticleReader/ArticleReader";
 import { notifications } from "@mantine/notifications";
 
 export default function ArticleListPage() {
+  const { t } = useTranslation("reader");
+  const { t: tl } = useTranslation("layout");
+  const { t: tc } = useTranslation("common");
   const { feedId } = useParams();
   const location = useLocation();
   const isStarred = location.pathname === "/starred";
@@ -65,7 +69,7 @@ export default function ArticleListPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["articles"] });
       queryClient.invalidateQueries({ queryKey: ["feeds"] });
-      notifications.show({ title: "Marked all as read", message: "" });
+      notifications.show({ title: tc("markedAllRead"), message: "" });
     },
   });
 
@@ -78,7 +82,7 @@ export default function ArticleListPage() {
       queryClient.invalidateQueries({ queryKey: ["feeds"] });
       setSelectedId(null);
       notifications.show({
-        title: "Feed deleted",
+        title: tc("feedDeleted"),
         message: "",
         color: "orange",
       });
@@ -92,14 +96,14 @@ export default function ArticleListPage() {
       queryClient.invalidateQueries({ queryKey: ["feeds"] });
       if (count > 0) {
         notifications.show({
-          title: "Refreshed",
-          message: `Fetched ${count} new articles`,
+          title: tc("refreshed"),
+          message: tc("fetchedNew", { count }),
           color: "green",
         });
       }
     },
     onError: (e: Error) => {
-      notifications.show({ title: "Refresh failed", message: e.message, color: "red" });
+      notifications.show({ title: tc("refreshFailed"), message: e.message, color: "red" });
     },
   });
 
@@ -148,7 +152,7 @@ export default function ArticleListPage() {
   if (isError) {
     return (
       <Group justify="center" py="xl">
-        <Text c="red">Failed to load articles</Text>
+        <Text c="red">{tc("failedToLoadArticles")}</Text>
       </Group>
     );
   }
@@ -166,13 +170,13 @@ export default function ArticleListPage() {
         <Group px="md" py="sm" justify="space-between">
           <Text fw={600} size="sm">
             {isStarred
-              ? "Starred"
-              : `Articles${data ? ` (${data.total})` : ""}`}
+              ? t("starred")
+              : `${t("articles", { count: data?.total ?? 0 })}`}
           </Text>
           <Group gap={4}>
             {feedId && (
               <>
-                <Tooltip label="Mark all read">
+                <Tooltip label={tl("markAllRead")}>
                   <ActionIcon
                     variant="subtle"
                     size="sm"
@@ -181,7 +185,7 @@ export default function ArticleListPage() {
                     <IconEyeOff size={14} />
                   </ActionIcon>
                 </Tooltip>
-                <Tooltip label="Delete feed">
+                <Tooltip label={tl("deleteFeed")}>
                   <ActionIcon
                     variant="subtle"
                     size="sm"
@@ -266,7 +270,7 @@ export default function ArticleListPage() {
             ))}
             {articles.length === 0 && !isLoading && (
               <Text size="sm" c="dimmed" ta="center" py="xl">
-                No articles yet. Add a feed or refresh.
+                {t("noArticlesYet")}
               </Text>
             )}
           </Stack>
@@ -279,7 +283,7 @@ export default function ArticleListPage() {
           <ArticleReader article={selectedArticle} />
         ) : (
           <Group justify="center" align="center" h="100%">
-            <Text c="dimmed">Select an article to read</Text>
+            <Text c="dimmed">{t("selectArticle")}</Text>
           </Group>
         )}
       </Box>

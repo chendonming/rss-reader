@@ -1,0 +1,17 @@
+{
+  "appTitle": "RSS Reader",
+  "settingsTooltip": "Settings (Ctrl+,)",
+  "feeds": "Feeds",
+  "allArticles": "All Articles",
+  "starred": "Starred",
+  "refreshAll": "Refresh all",
+  "addFeed": "Add feed",
+  "noFeedsYet": "No feeds yet. Click + to add one.",
+  "failedToLoadFeeds": "Failed to load feeds",
+  "addFeedTitle": "Add Feed",
+  "feedUrl": "Feed URL",
+  "feedUrlPlaceholder": "https://example.com/rss",
+  "feedFormats": "Supports RSS 2.0, RSS 1.0, and Atom feeds.",
+  "markAllRead": "Mark all read",
+  "deleteFeed": "Delete feed"
+}
