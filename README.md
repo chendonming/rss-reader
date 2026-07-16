@@ -1,5 +1,9 @@
 
 <p align="center">
+  <a href="README_zh.md">🇨🇳 中文</a>
+</p>
+
+<p align="center">
   <br>
   <a href="#">
     <img src="https://img.icons8.com/?size=128&id=82819&format=png" width="80" alt="rss-logo">
