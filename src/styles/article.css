@@ -36,11 +36,27 @@
   font-size: 14px;
 }
 
+[data-mantine-color-scheme="dark"] .article-content pre {
+  background-color: var(--mantine-color-dark-6);
+  color: var(--mantine-color-dark-0);
+}
+
 .article-content code {
   font-size: 0.9em;
   padding: 2px 6px;
   background-color: var(--mantine-color-gray-0);
   border-radius: 4px;
+}
+
+[data-mantine-color-scheme="dark"] .article-content code {
+  background-color: var(--mantine-color-dark-5);
+  color: var(--mantine-color-dark-0);
+}
+
+[data-mantine-color-scheme="dark"] .article-content pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
 }
 
 .article-content h1,
