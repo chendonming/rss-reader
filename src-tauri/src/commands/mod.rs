@@ -79,10 +79,10 @@ pub fn get_articles(
 #[tauri::command]
 pub fn get_article(state: State<'_, AppState>, id: String) -> Result<crate::db::Article, String> {
     let db = state.db.lock().map_err(|e| e.to_string())?;
-    let article = db.get_article(&id).map_err(|e| e.to_string())?;
 
-    // Auto-mark as read
+    // Auto-mark as read first, then fetch (so the returned article has is_read = true)
     db.mark_read(&id).ok();
+    let article = db.get_article(&id).map_err(|e| e.to_string())?;
 
     log::info!("get_article: id={}", id);
     Ok(article)

@@ -295,6 +295,9 @@ export default function ArticleListPage() {
                   }
                   onClick={() => {
                     setSelectedId(article.id);
+                    if (!article.is_read) {
+                      markReadMutation.mutate(article.id);
+                    }
                   }}
                 >
                   <div className="rd-article-item-top">
