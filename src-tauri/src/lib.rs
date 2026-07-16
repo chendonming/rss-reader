@@ -17,6 +17,9 @@ pub struct AppState {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
+    log::info!("RSS Reader starting...");
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(AppState {
@@ -32,6 +35,8 @@ pub fn run() {
                 .expect("failed to get app data dir");
             std::fs::create_dir_all(&app_dir).ok();
 
+            log::info!("App data dir: {:?}", app_dir);
+
             let state = app.state::<AppState>();
             *state.app_data_dir.lock().unwrap() = app_dir.clone();
 
@@ -39,6 +44,7 @@ pub fn run() {
             let mut db = state.db.lock().unwrap();
             db.init(&db_path.to_string_lossy())
                 .expect("failed to initialize database");
+            log::info!("Database initialized at: {:?}", db_path);
 
             // Load saved AI config
             let config_path = app_dir.join("ai_config.json");
@@ -60,6 +66,7 @@ pub fn run() {
             }
 
             // Spawn background refresh task
+            log::info!("Spawning background refresh task (30-min interval)");
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(1800));
@@ -68,9 +75,10 @@ pub fn run() {
                     if let Some(state) = app_handle.try_state::<AppState>() {
                         let db = state.db.lock().unwrap();
                         let feeds = db.get_all_feeds().unwrap_or_default();
+                        log::info!("Background refresh: {} feeds to check", feeds.len());
                         for feed in feeds {
                             if let Err(e) = fetcher::refresh::refresh_single_feed(&db, &feed.id) {
-                                eprintln!("Failed to refresh feed {}: {}", feed.id, e);
+                                log::error!("Failed to refresh feed {}: {}", feed.id, e);
                             }
                         }
                     }

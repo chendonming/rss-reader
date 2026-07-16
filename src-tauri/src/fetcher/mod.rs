@@ -4,6 +4,7 @@ use crate::db::Article;
 use feed_rs::parser;
 
 pub fn fetch_and_parse_feed(url: &str) -> Result<(String, Option<String>, Option<String>, Vec<Article>), String> {
+    log::info!("fetch_and_parse_feed: fetching {}", url);
     let rt = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
     let response = rt
         .block_on(async { reqwest::get(url).await })

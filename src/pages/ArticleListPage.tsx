@@ -26,6 +26,7 @@ import { getArticles, markAllRead, toggleStar, deleteFeed, refreshFeed, markRead
 import type { Article } from "../types";
 import { ArticleReader } from "../components/ArticleReader/ArticleReader";
 import { notifications } from "@mantine/notifications";
+import { log } from "../utils/logger";
 
 export default function ArticleListPage() {
   const { t } = useTranslation("reader");
@@ -39,7 +40,10 @@ export default function ArticleListPage() {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["articles", feedId ?? "__all", isStarred],
-    queryFn: () => getArticles(feedId, isStarred, 1, 100),
+    queryFn: () => {
+      log.info("Loading articles: feed=" + (feedId ?? "__all") + ", starred=" + isStarred);
+      return getArticles(feedId, isStarred, 1, 100);
+    },
   });
 
   const articles: Article[] = data?.articles ?? [];
@@ -63,7 +67,10 @@ export default function ArticleListPage() {
 
   const markAllReadMutation = useMutation({
     mutationFn: () => {
-      if (!feedId) throw new Error("No feed selected");
+      if (!feedId) {
+        log.warn("markAllRead called but no feed selected");
+        throw new Error("No feed selected");
+      }
       return markAllRead(feedId);
     },
     onSuccess: () => {
@@ -75,7 +82,10 @@ export default function ArticleListPage() {
 
   const deleteFeedMutation = useMutation({
     mutationFn: () => {
-      if (!feedId) throw new Error("No feed selected");
+      if (!feedId) {
+        log.warn("deleteFeed called but no feed selected");
+        throw new Error("No feed selected");
+      }
       return deleteFeed(feedId);
     },
     onSuccess: () => {
@@ -103,6 +113,7 @@ export default function ArticleListPage() {
       }
     },
     onError: (e: Error) => {
+      log.error("Refresh failed:", e.message);
       notifications.show({ title: tc("refreshFailed"), message: e.message, color: "red" });
     },
   });

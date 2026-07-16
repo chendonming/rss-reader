@@ -14,6 +14,7 @@ import i18n from "../i18n";
 import { notifications } from "@mantine/notifications";
 import { getAiSettings, saveAiSettings, getLanguage, setLanguage } from "../api";
 import type { AiConfig } from "../types";
+import { log } from "../utils/logger";
 
 export default function SettingsPage() {
   const { t } = useTranslation("settings");
@@ -33,8 +34,8 @@ export default function SettingsPage() {
       .then((settings: AiConfig) => {
         setConfig(settings);
       })
-      .catch(() => {
-        // Use defaults
+      .catch((e) => {
+        log.warn("getAiSettings failed, using defaults:", e);
       })
       .finally(() => setLoading(false));
 
@@ -42,8 +43,8 @@ export default function SettingsPage() {
       if (savedLang) {
         setLang(savedLang);
       }
-    }).catch(() => {
-      // Use current i18n language
+    }).catch((e) => {
+      log.warn("getLanguage failed, using current i18n language:", e);
     });
   }, []);
 
@@ -71,7 +72,7 @@ export default function SettingsPage() {
     if (!value) return;
     setLang(value);
     await i18n.changeLanguage(value);
-    setLanguage(value).catch(() => {});
+    setLanguage(value).catch((e) => log.warn("setLanguage failed:", e));
   };
 
   if (loading) {

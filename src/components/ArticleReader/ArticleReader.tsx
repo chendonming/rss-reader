@@ -33,6 +33,7 @@ import {
 } from "../../api";
 import type { Article } from "../../types";
 import { notifications } from "@mantine/notifications";
+import { log } from "../../utils/logger";
 
 interface Props {
   article: Article;
@@ -81,6 +82,7 @@ export function ArticleReader({ article }: Props) {
       setShowTranslation(true);
     },
     onError: (e: Error) => {
+      log.error("Translation failed for article {}:", article.id, e);
       notifications.show({
         title: tc("translationFailed"),
         message: e.message,
@@ -96,6 +98,7 @@ export function ArticleReader({ article }: Props) {
       setShowSummary(true);
     },
     onError: (e: Error) => {
+      log.error("Summary failed for article {}:", article.id, e);
       notifications.show({
         title: tc("summaryFailed"),
         message: e.message,

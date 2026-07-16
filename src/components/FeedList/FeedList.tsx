@@ -23,6 +23,7 @@ import type { Feed } from "../../types";
 import { AddFeedModal } from "./AddFeedModal";
 import { useState } from "react";
 import { notifications } from "@mantine/notifications";
+import { log } from "../../utils/logger";
 
 export function FeedList() {
   const { t } = useTranslation("layout");
@@ -43,10 +44,12 @@ export function FeedList() {
   });
 
   const handleRefreshAll = async () => {
+    log.info("Refreshing all feeds...");
     try {
       const count = await refreshAll();
       queryClient.invalidateQueries({ queryKey: ["feeds"] });
       queryClient.invalidateQueries({ queryKey: ["articles"] });
+      log.info("Refresh all completed: " + count + " new articles");
       if (count > 0) {
         notifications.show({
           title: tc("refreshed"),
@@ -60,6 +63,7 @@ export function FeedList() {
         });
       }
     } catch (e) {
+      log.error("Refresh all failed:", e);
       notifications.show({
         title: tc("error"),
         message: String(e),
