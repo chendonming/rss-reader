@@ -5,6 +5,27 @@ use crate::{ai, db::Feed};
 use tauri::State;
 
 #[tauri::command]
+pub fn get_translation_layout(state: State<'_, AppState>) -> Result<String, String> {
+    log::info!("get_translation_layout called");
+    let db = state.db.lock().map_err(|e| e.to_string())?;
+    let layout = db
+        .get_setting("translation_layout")
+        .map_err(|e| e.to_string())?
+        .unwrap_or_else(|| "replace".to_string());
+    log::info!("get_translation_layout: {}", layout);
+    Ok(layout)
+}
+
+#[tauri::command]
+pub fn set_translation_layout(state: State<'_, AppState>, layout: String) -> Result<(), String> {
+    log::info!("set_translation_layout: {}", layout);
+    let db = state.db.lock().map_err(|e| e.to_string())?;
+    db.set_setting("translation_layout", &layout)
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
 pub fn add_feed(state: State<'_, AppState>, url: String) -> Result<Feed, String> {
     log::info!("add_feed called: {}", url);
     let db = state.db.lock().map_err(|e| e.to_string())?;

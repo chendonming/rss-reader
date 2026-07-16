@@ -1,6 +1,7 @@
 pub mod models;
 pub mod feeds;
 pub mod articles;
+pub mod settings;
 
 use rusqlite::Connection;
 pub use models::*;
@@ -49,7 +50,12 @@ impl Database {
 
             CREATE INDEX IF NOT EXISTS idx_articles_feed_id ON articles(feed_id);
             CREATE INDEX IF NOT EXISTS idx_articles_is_read ON articles(is_read);
-            CREATE INDEX IF NOT EXISTS idx_articles_pub_date ON articles(pub_date);",
+            CREATE INDEX IF NOT EXISTS idx_articles_pub_date ON articles(pub_date);
+
+            CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            );",
         )?;
 
         self.conn = Some(conn);

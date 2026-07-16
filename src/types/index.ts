@@ -40,3 +40,5 @@ export interface AiConfig {
   base_url: string;
   model: string;
 }
+
+export type TranslationLayout = "replace" | "side-by-side";

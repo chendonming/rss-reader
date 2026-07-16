@@ -131,6 +131,8 @@ pub fn run() {
             commands::save_ai_settings,
             commands::get_language,
             commands::set_language,
+            commands::get_translation_layout,
+            commands::set_translation_layout,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

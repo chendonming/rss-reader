@@ -84,3 +84,11 @@ export async function getLanguage(): Promise<string> {
 export async function setLanguage(language: string): Promise<void> {
   return invokeCmd("set_language", { language });
 }
+
+export async function getTranslationLayout(): Promise<string> {
+  return invokeCmd("get_translation_layout");
+}
+
+export async function setTranslationLayout(layout: string): Promise<void> {
+  return invokeCmd("set_translation_layout", { layout });
+}

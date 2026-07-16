@@ -13,5 +13,7 @@
   "articles": "文章 ({{count}})",
   "starred": "星标",
   "selectArticle": "选择一篇文章阅读",
-  "noArticlesYet": "暂无文章，请添加订阅源或刷新。"
+  "noArticlesYet": "暂无文章，请添加订阅源或刷新。",
+  "replaceMode": "替换显示",
+  "sideBySide": "右侧对比"
 }
