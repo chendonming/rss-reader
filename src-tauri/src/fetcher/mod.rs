@@ -5,13 +5,10 @@ use feed_rs::parser;
 
 pub fn fetch_and_parse_feed(url: &str) -> Result<(String, Option<String>, Option<String>, Vec<Article>), String> {
     log::info!("fetch_and_parse_feed: fetching {}", url);
-    let rt = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
-    let response = rt
-        .block_on(async { reqwest::get(url).await })
+    let response = reqwest::blocking::get(url)
         .map_err(|e| format!("Failed to fetch feed: {}", e))?;
 
-    let bytes = rt
-        .block_on(async { response.bytes().await })
+    let bytes = response.bytes()
         .map_err(|e| format!("Failed to read response: {}", e))?;
 
     let feed = parser::parse(&bytes[..]).map_err(|e| format!("Failed to parse feed: {}", e))?;

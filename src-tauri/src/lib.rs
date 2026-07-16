@@ -72,14 +72,41 @@ pub fn run() {
                 let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(1800));
                 loop {
                     interval.tick().await;
-                    if let Some(state) = app_handle.try_state::<AppState>() {
-                        let db = state.db.lock().unwrap();
-                        let feeds = db.get_all_feeds().unwrap_or_default();
-                        log::info!("Background refresh: {} feeds to check", feeds.len());
-                        for feed in feeds {
+                    // Get feed list quickly without holding the lock
+                    let feeds = {
+                        let state = match app_handle.try_state::<AppState>() {
+                            Some(s) => s,
+                            None => continue,
+                        };
+                        let db = match state.db.lock() {
+                            Ok(guard) => guard,
+                            Err(e) => {
+                                log::error!("Background refresh: db lock poisoned: {}", e);
+                                continue;
+                            }
+                        };
+                        db.get_all_feeds().unwrap_or_default()
+                    };
+                    log::info!("Background refresh: {} feeds to check", feeds.len());
+                    for feed in feeds {
+                        let handle = app_handle.clone();
+                        if let Err(e) = tokio::task::spawn_blocking(move || {
+                            let state = match handle.try_state::<AppState>() {
+                                Some(s) => s,
+                                _ => return,
+                            };
+                            let db = match state.db.lock() {
+                                Ok(guard) => guard,
+                                Err(e) => {
+                                    log::error!("Background refresh: db lock poisoned: {}", e);
+                                    return;
+                                }
+                            };
                             if let Err(e) = fetcher::refresh::refresh_single_feed(&db, &feed.id) {
                                 log::error!("Failed to refresh feed {}: {}", feed.id, e);
                             }
+                        }).await {
+                            log::error!("Background refresh task panicked: {:?}", e);
                         }
                     }
                 }
