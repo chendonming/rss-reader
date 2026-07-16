@@ -26,5 +26,9 @@
   "translationLayout": "翻译布局",
   "translationLayoutDesc": "选择翻译内容的显示方式。",
   "replaceMode": "替换显示",
-  "sideBySide": "右侧对比"
+  "sideBySide": "右侧对比",
+  "testConnection": "测试连接",
+  "testingConnection": "测试中...",
+  "connectionSuccess": "连接成功",
+  "connectionFailed": "连接失败"
 }

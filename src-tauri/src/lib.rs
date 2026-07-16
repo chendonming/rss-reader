@@ -133,6 +133,7 @@ pub fn run() {
             commands::set_language,
             commands::get_translation_layout,
             commands::set_translation_layout,
+            commands::test_ai_connection,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

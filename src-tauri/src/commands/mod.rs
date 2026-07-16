@@ -176,10 +176,8 @@ pub async fn translate_article(state: State<'_, AppState>, id: String, force: Op
         (content, ai_config.clone())
     }; // Mutex locks are dropped here
 
-    // Perform AI call on a background thread so it doesn't block the main thread
-    let result = tokio::task::spawn_blocking(move || ai::call_translate(&ai_config, &content))
-        .await
-        .map_err(|e| format!("Translation task panicked: {}", e))??;
+    // Perform AI call directly on the async runtime
+    let result = ai::call_translate(&ai_config, &content).await?;
 
     // Cache result
     let db = state.db.lock().map_err(|e| e.to_string())?;
@@ -225,10 +223,8 @@ pub async fn summarize_article(state: State<'_, AppState>, id: String) -> Result
         (content, ai_config.clone())
     }; // Mutex locks are dropped here
 
-    // Perform AI call on a background thread so it doesn't block the main thread
-    let result = tokio::task::spawn_blocking(move || ai::call_summarize(&ai_config, &content))
-        .await
-        .map_err(|e| format!("Summary task panicked: {}", e))??;
+    // Perform AI call directly on the async runtime
+    let result = ai::call_summarize(&ai_config, &content).await?;
 
     // Cache result
     let db = state.db.lock().map_err(|e| e.to_string())?;
@@ -294,4 +290,13 @@ pub fn save_ai_settings(state: State<'_, AppState>, config: AiConfig) -> Result<
 
     log::info!("save_ai_settings: saved");
     Ok(())
+}
+
+#[tauri::command]
+pub async fn test_ai_connection(config: AiConfig) -> Result<String, String> {
+    log::info!(
+        "test_ai_connection: provider={}, base_url={}, model={}",
+        config.provider, config.base_url, config.model
+    );
+    ai::call_test(&config).await
 }

@@ -77,6 +77,10 @@ export async function saveAiSettings(config: AiConfig): Promise<void> {
   return invokeCmd("save_ai_settings", { config });
 }
 
+export async function testAiConnection(config: AiConfig): Promise<string> {
+  return invokeCmd("test_ai_connection", { config });
+}
+
 export async function getLanguage(): Promise<string> {
   return invokeCmd("get_language");
 }

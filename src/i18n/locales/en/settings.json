@@ -26,5 +26,9 @@
   "translationLayout": "Translation Layout",
   "translationLayoutDesc": "Choose how translated articles are displayed.",
   "replaceMode": "Replace",
-  "sideBySide": "Side by Side"
+  "sideBySide": "Side by Side",
+  "testConnection": "Test Connection",
+  "testingConnection": "Testing...",
+  "connectionSuccess": "Connection successful",
+  "connectionFailed": "Connection failed"
 }

@@ -1,7 +1,7 @@
 use crate::db::AiConfig;
 use serde_json::json;
 
-pub fn call(config: &AiConfig, prompt: &str) -> Result<String, String> {
+pub async fn call(config: &AiConfig, prompt: &str) -> Result<String, String> {
     let url = if config.base_url.contains("anthropic") || config.base_url.is_empty() {
         "https://api.anthropic.com/v1/messages".to_string()
     } else {
@@ -17,7 +17,7 @@ pub fn call(config: &AiConfig, prompt: &str) -> Result<String, String> {
         "messages": [{"role": "user", "content": prompt}],
     });
 
-    let client = reqwest::blocking::Client::new();
+    let client = reqwest::Client::new();
     let response = client
         .post(&url)
         .header("x-api-key", &config.api_key)
@@ -25,11 +25,19 @@ pub fn call(config: &AiConfig, prompt: &str) -> Result<String, String> {
         .header("Content-Type", "application/json")
         .json(&body)
         .send()
-        .map_err(|e: reqwest::Error| format!("API request failed: {}", e))?;
+        .await
+        .map_err(|e: reqwest::Error| {
+            let kind = if e.is_connect() { "connection failed" }
+                      else if e.is_timeout() { "timeout" }
+                      else if e.is_request() { "request error" }
+                      else { "unknown" };
+            format!("API request failed ({}): {}", kind, e)
+        })?;
 
     let status = response.status();
     let text = response
         .text()
+        .await
         .map_err(|e: reqwest::Error| format!("Failed to read response: {}", e))?;
 
     if !status.is_success() {

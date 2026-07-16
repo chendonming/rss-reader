@@ -12,6 +12,7 @@ import { notifications } from "@mantine/notifications";
 import {
   getAiSettings,
   saveAiSettings,
+  testAiConnection,
   getLanguage,
   setLanguage,
   getTranslationLayout,
@@ -33,6 +34,7 @@ export default function SettingsPage() {
   const [layoutMode, setLayoutMode] = useState<TranslationLayout>("replace");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [testing, setTesting] = useState(false);
 
   useEffect(() => {
     getAiSettings()
@@ -82,6 +84,27 @@ export default function SettingsPage() {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    setTesting(true);
+    try {
+      await testAiConnection(config);
+      notifications.show({
+        title: tc("saved"),
+        message: t("connectionSuccess"),
+        color: "green",
+      });
+    } catch (e) {
+      notifications.show({
+        title: t("connectionFailed"),
+        message: String(e),
+        color: "red",
+        autoClose: false,
+      });
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -190,6 +213,10 @@ export default function SettingsPage() {
               setConfig((c: AiConfig) => ({ ...c, model: v }));
             }}
           />
+
+          <Button onClick={handleTestConnection} loading={testing} variant="light" mt="xs">
+            {testing ? t("testingConnection") : t("testConnection")}
+          </Button>
 
           <Button onClick={handleSave} loading={saving} mt="md">
             {tc("save")}
