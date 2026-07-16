@@ -13,5 +13,6 @@
   "feedUrlPlaceholder": "https://example.com/rss",
   "feedFormats": "Supports RSS 2.0, RSS 1.0, and Atom feeds.",
   "markAllRead": "Mark all read",
-  "deleteFeed": "Delete feed"
+  "deleteFeed": "Delete feed",
+  "confirmDelete": "Are you sure you want to delete \"{{title}}\"?"
 }

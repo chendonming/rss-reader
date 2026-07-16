@@ -260,6 +260,17 @@ body {
   color: white;
 }
 
+/* Delete button: hidden by default, shown on hover */
+.rd-nav-delete {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  flex-shrink: 0;
+}
+
+.rd-nav-item:hover .rd-nav-delete {
+  opacity: 1;
+}
+
 /* ---- Article List ---- */
 .rd-article-list {
   width: var(--rd-article-list-width);

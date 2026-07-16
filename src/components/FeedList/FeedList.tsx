@@ -10,11 +10,12 @@ import {
   IconStar,
   IconPlus,
   IconRefresh,
+  IconTrash,
 } from "@tabler/icons-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { getFeeds, refreshAll } from "../../api";
+import { getFeeds, deleteFeed, refreshAll } from "../../api";
 import type { Feed } from "../../types";
 import { AddFeedModal } from "./AddFeedModal";
 import { useState } from "react";
@@ -59,6 +60,31 @@ export function FeedList() {
       }
     } catch (e) {
       log.error("Refresh all failed:", e);
+      notifications.show({
+        title: tc("error"),
+        message: String(e),
+        color: "red",
+      });
+    }
+  };
+
+  const handleDeleteFeed = async (feed: Feed, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm(t("confirmDelete", { title: feed.title }))) return;
+    try {
+      await deleteFeed(feed.id);
+      queryClient.invalidateQueries({ queryKey: ["feeds"] });
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      notifications.show({
+        title: tc("feedDeleted"),
+        message: "",
+        color: "green",
+      });
+      if (feedId === feed.id) {
+        navigate("/");
+      }
+    } catch (e) {
+      log.error("Delete feed failed:", e);
       notifications.show({
         title: tc("error"),
         message: String(e),
@@ -143,6 +169,17 @@ export function FeedList() {
             >
               <IconRss className="rd-nav-icon" />
               <span className="rd-nav-label">{feed.title}</span>
+              <Tooltip label={t("deleteFeed")}>
+                <ActionIcon
+                  variant="subtle"
+                  size="xs"
+                  className="rd-nav-delete"
+                  color="gray"
+                  onClick={(e) => handleDeleteFeed(feed, e)}
+                >
+                  <IconTrash size={12} />
+                </ActionIcon>
+              </Tooltip>
               {feed.unread_count > 0 && (
                 <span className="rd-nav-count">
                   {feed.unread_count > 99 ? "99+" : feed.unread_count}

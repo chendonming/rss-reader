@@ -13,5 +13,6 @@
   "feedUrlPlaceholder": "https://example.com/rss",
   "feedFormats": "支持 RSS 2.0、RSS 1.0 和 Atom 订阅源。",
   "markAllRead": "全部标记已读",
-  "deleteFeed": "删除订阅源"
+  "deleteFeed": "删除订阅源",
+  "confirmDelete": "确定要删除 \"{{title}}\" 吗？"
 }
