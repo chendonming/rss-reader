@@ -139,41 +139,50 @@ pub fn refresh_feed(state: State<'_, AppState>, id: String) -> Result<usize, Str
 }
 
 #[tauri::command]
-pub fn translate_article(state: State<'_, AppState>, id: String, force: Option<bool>) -> Result<String, String> {
+pub async fn translate_article(state: State<'_, AppState>, id: String, force: Option<bool>) -> Result<String, String> {
     log::info!("translate_article called: id={}, force={:?}", id, force);
-    let db = state.db.lock().map_err(|e| e.to_string())?;
 
-    let article = db.get_article(&id).map_err(|e| e.to_string())?;
+    // Extract data and AI config while holding locks, then drop locks before the async AI call
+    let (content, ai_config) = {
+        let db = state.db.lock().map_err(|e| e.to_string())?;
+        let article = db.get_article(&id).map_err(|e| e.to_string())?;
 
-    // Check cache (skip if force is true)
-    if force != Some(true) {
-        if let Some(ref translation) = article.translation {
-            if !translation.is_empty() {
-                log::info!("translate_article: cache hit for id={}", id);
-                return Ok(translation.clone());
+        // Check cache (skip if force is true)
+        if force != Some(true) {
+            if let Some(ref translation) = article.translation {
+                if !translation.is_empty() {
+                    log::info!("translate_article: cache hit for id={}", id);
+                    return Ok(translation.clone());
+                }
             }
         }
-    }
 
-    // Get content to translate
-    let content = article
-        .content
-        .or(article.summary)
-        .ok_or_else(|| {
-            log::warn!("translate_article: no content for id={}", id);
-            "No content to translate".to_string()
-        })?;
+        // Get content to translate
+        let content = article
+            .content
+            .or(article.summary)
+            .ok_or_else(|| {
+                log::warn!("translate_article: no content for id={}", id);
+                "No content to translate".to_string()
+            })?;
 
-    // Get AI config
-    let ai_config = state.ai_config.lock().map_err(|e| e.to_string())?;
-    if ai_config.api_key.is_empty() {
-        log::warn!("translate_article: AI API key not configured");
-        return Err("AI API key not configured. Please go to Settings.".to_string());
-    }
+        // Get AI config
+        let ai_config = state.ai_config.lock().map_err(|e| e.to_string())?;
+        if ai_config.api_key.is_empty() {
+            log::warn!("translate_article: AI API key not configured");
+            return Err("AI API key not configured. Please go to Settings.".to_string());
+        }
 
-    let result = ai::call_translate(&ai_config, &content)?;
+        (content, ai_config.clone())
+    }; // Mutex locks are dropped here
+
+    // Perform AI call on a background thread so it doesn't block the main thread
+    let result = tokio::task::spawn_blocking(move || ai::call_translate(&ai_config, &content))
+        .await
+        .map_err(|e| format!("Translation task panicked: {}", e))??;
 
     // Cache result
+    let db = state.db.lock().map_err(|e| e.to_string())?;
     db.update_article_translation(&id, &result)
         .map_err(|e| e.to_string())?;
 
@@ -182,38 +191,47 @@ pub fn translate_article(state: State<'_, AppState>, id: String, force: Option<b
 }
 
 #[tauri::command]
-pub fn summarize_article(state: State<'_, AppState>, id: String) -> Result<String, String> {
+pub async fn summarize_article(state: State<'_, AppState>, id: String) -> Result<String, String> {
     log::info!("summarize_article called: id={}", id);
-    let db = state.db.lock().map_err(|e| e.to_string())?;
 
-    // Check cache first
-    let article = db.get_article(&id).map_err(|e| e.to_string())?;
-    if let Some(ref summary_ai) = article.summary_ai {
-        if !summary_ai.is_empty() {
-            log::info!("summarize_article: cache hit for id={}", id);
-            return Ok(summary_ai.clone());
+    let (content, ai_config) = {
+        let db = state.db.lock().map_err(|e| e.to_string())?;
+
+        // Check cache first
+        let article = db.get_article(&id).map_err(|e| e.to_string())?;
+        if let Some(ref summary_ai) = article.summary_ai {
+            if !summary_ai.is_empty() {
+                log::info!("summarize_article: cache hit for id={}", id);
+                return Ok(summary_ai.clone());
+            }
         }
-    }
 
-    // Get content to summarize
-    let content = article
-        .content
-        .or(article.summary)
-        .ok_or_else(|| {
-            log::warn!("summarize_article: no content for id={}", id);
-            "No content to summarize".to_string()
-        })?;
+        // Get content to summarize
+        let content = article
+            .content
+            .or(article.summary)
+            .ok_or_else(|| {
+                log::warn!("summarize_article: no content for id={}", id);
+                "No content to summarize".to_string()
+            })?;
 
-    // Get AI config
-    let ai_config = state.ai_config.lock().map_err(|e| e.to_string())?;
-    if ai_config.api_key.is_empty() {
-        log::warn!("summarize_article: AI API key not configured");
-        return Err("AI API key not configured. Please go to Settings.".to_string());
-    }
+        // Get AI config
+        let ai_config = state.ai_config.lock().map_err(|e| e.to_string())?;
+        if ai_config.api_key.is_empty() {
+            log::warn!("summarize_article: AI API key not configured");
+            return Err("AI API key not configured. Please go to Settings.".to_string());
+        }
 
-    let result = ai::call_summarize(&ai_config, &content)?;
+        (content, ai_config.clone())
+    }; // Mutex locks are dropped here
+
+    // Perform AI call on a background thread so it doesn't block the main thread
+    let result = tokio::task::spawn_blocking(move || ai::call_summarize(&ai_config, &content))
+        .await
+        .map_err(|e| format!("Summary task panicked: {}", e))??;
 
     // Cache result
+    let db = state.db.lock().map_err(|e| e.to_string())?;
     db.update_article_summary(&id, &result)
         .map_err(|e| e.to_string())?;
 
