@@ -126,9 +126,10 @@ export default function SettingsPage() {
               isAnthropic ? "sk-ant-..." : "sk-..."
             }
             value={config.api_key}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setConfig((c: AiConfig) => ({ ...c, api_key: e.currentTarget.value }))
-            }
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const v = e.currentTarget.value;
+              setConfig((c: AiConfig) => ({ ...c, api_key: v }));
+            }}
           />
 
           <TextInput
@@ -144,9 +145,10 @@ export default function SettingsPage() {
                 : "https://api.openai.com/v1"
             }
             value={config.base_url}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setConfig((c: AiConfig) => ({ ...c, base_url: e.currentTarget.value }))
-            }
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const v = e.currentTarget.value;
+              setConfig((c: AiConfig) => ({ ...c, base_url: v }));
+            }}
           />
 
           <TextInput
@@ -158,9 +160,10 @@ export default function SettingsPage() {
             }
             placeholder={isAnthropic ? "claude-sonnet-4-20250514" : "gpt-4o-mini"}
             value={config.model}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setConfig((c: AiConfig) => ({ ...c, model: e.currentTarget.value }))
-            }
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const v = e.currentTarget.value;
+              setConfig((c: AiConfig) => ({ ...c, model: v }));
+            }}
           />
 
           <Button onClick={handleSave} loading={saving} mt="md">
