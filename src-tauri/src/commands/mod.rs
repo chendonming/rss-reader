@@ -139,16 +139,19 @@ pub fn refresh_feed(state: State<'_, AppState>, id: String) -> Result<usize, Str
 }
 
 #[tauri::command]
-pub fn translate_article(state: State<'_, AppState>, id: String) -> Result<String, String> {
-    log::info!("translate_article called: id={}", id);
+pub fn translate_article(state: State<'_, AppState>, id: String, force: Option<bool>) -> Result<String, String> {
+    log::info!("translate_article called: id={}, force={:?}", id, force);
     let db = state.db.lock().map_err(|e| e.to_string())?;
 
-    // Check cache first
     let article = db.get_article(&id).map_err(|e| e.to_string())?;
-    if let Some(ref translation) = article.translation {
-        if !translation.is_empty() {
-            log::info!("translate_article: cache hit for id={}", id);
-            return Ok(translation.clone());
+
+    // Check cache (skip if force is true)
+    if force != Some(true) {
+        if let Some(ref translation) = article.translation {
+            if !translation.is_empty() {
+                log::info!("translate_article: cache hit for id={}", id);
+                return Ok(translation.clone());
+            }
         }
     }
 

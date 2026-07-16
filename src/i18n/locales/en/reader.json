@@ -15,5 +15,6 @@
   "selectArticle": "Select an article to read",
   "noArticlesYet": "No articles yet. Add a feed or refresh.",
   "replaceMode": "Replace",
-  "sideBySide": "Side by Side"
+  "sideBySide": "Side by Side",
+  "reTranslate": "Re-translate"
 }

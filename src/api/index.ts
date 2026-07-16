@@ -61,8 +61,8 @@ export async function refreshFeed(id: string): Promise<number> {
   return invokeCmd("refresh_feed", { id });
 }
 
-export async function translateArticle(id: string): Promise<string> {
-  return invokeCmd("translate_article", { id });
+export async function translateArticle(id: string, force?: boolean): Promise<string> {
+  return invokeCmd("translate_article", { id, force: force ?? null });
 }
 
 export async function summarizeArticle(id: string): Promise<string> {

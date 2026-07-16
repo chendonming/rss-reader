@@ -23,6 +23,7 @@ import {
   IconEye,
   IconEyeOff,
   IconChevronDown,
+  IconRefresh,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -93,7 +94,8 @@ export function ArticleReader({ article }: Props) {
   });
 
   const translateMutation = useMutation({
-    mutationFn: () => translateArticle(article.id),
+    mutationFn: (opts?: { force?: boolean }) =>
+      translateArticle(article.id, opts?.force),
     onSuccess: (data) => {
       setTranslationText(data);
       setShowTranslation(true);
@@ -134,7 +136,7 @@ export function ArticleReader({ article }: Props) {
     if (translationText) {
       setShowTranslation(!showTranslation);
     } else {
-      translateMutation.mutate();
+      translateMutation.mutate(undefined);
     }
   };
 
@@ -318,6 +320,13 @@ export function ArticleReader({ article }: Props) {
                   {...(layoutMode === "side-by-side" ? { bg: "var(--mantine-color-blue-0)" } : {})}
                 >
                   {t("sideBySide")}
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Item
+                  leftSection={<IconRefresh size={14} />}
+                  onClick={() => translateMutation.mutate({ force: true })}
+                >
+                  {t("reTranslate")}
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
