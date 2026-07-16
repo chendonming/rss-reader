@@ -12,7 +12,6 @@ import {
   Paper,
   Divider,
   Title,
-  Menu,
 } from "@mantine/core";
 import {
   IconStar,
@@ -22,7 +21,6 @@ import {
   IconRobot,
   IconEye,
   IconEyeOff,
-  IconChevronDown,
   IconRefresh,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -37,7 +35,6 @@ import {
   translateArticle,
   summarizeArticle,
   getTranslationLayout,
-  setTranslationLayout,
 } from "../../api";
 import type { Article, TranslationLayout } from "../../types";
 import { notifications } from "@mantine/notifications";
@@ -146,11 +143,6 @@ export function ArticleReader({ article }: Props) {
     } else {
       translateMutation.mutate(undefined);
     }
-  };
-
-  const handleLayoutChange = (layout: TranslationLayout) => {
-    setLayoutMode(layout);
-    setTranslationLayout(layout);
   };
 
   const renderArticleMeta = () => (
@@ -301,43 +293,27 @@ export function ArticleReader({ article }: Props) {
           </Group>
 
           <Group gap={4}>
-            <Menu>
-              <Menu.Target>
-                <Button
+            <Button
+              variant="light"
+              size="compact-sm"
+              leftSection={<IconLanguage size={14} />}
+              onClick={handleTranslateClick}
+              loading={translateMutation.isPending}
+            >
+              {showTranslation ? t("hideTranslation") : t("translate")}
+            </Button>
+            {showTranslation && translationText && (
+              <Tooltip label={t("reTranslate")}>
+                <ActionIcon
                   variant="light"
-                  size="compact-sm"
-                  leftSection={<IconLanguage size={14} />}
-                  rightSection={<IconChevronDown size={14} />}
-                  onClick={handleTranslateClick}
+                  size="sm"
+                  onClick={() => translateMutation.mutate({ force: true })}
                   loading={translateMutation.isPending}
                 >
-                  {showTranslation ? t("hideTranslation") : t("translate")}
-                </Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<IconLanguage size={14} />}
-                  onClick={() => handleLayoutChange("replace")}
-                  {...(layoutMode === "replace" ? { bg: "var(--mantine-color-blue-0)" } : {})}
-                >
-                  {t("replaceMode")}
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconLanguage size={14} />}
-                  onClick={() => handleLayoutChange("side-by-side")}
-                  {...(layoutMode === "side-by-side" ? { bg: "var(--mantine-color-blue-0)" } : {})}
-                >
-                  {t("sideBySide")}
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Item
-                  leftSection={<IconRefresh size={14} />}
-                  onClick={() => translateMutation.mutate({ force: true })}
-                >
-                  {t("reTranslate")}
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+                  <IconRefresh size={14} />
+                </ActionIcon>
+              </Tooltip>
+            )}
             <Button
               variant="light"
               size="compact-sm"

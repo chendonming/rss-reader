@@ -22,5 +22,9 @@
   "language": "语言",
   "languageDescription": "界面语言",
   "chinese": "中文",
-  "english": "English"
+  "english": "English",
+  "translationLayout": "翻译布局",
+  "translationLayoutDesc": "选择翻译内容的显示方式。",
+  "replaceMode": "替换显示",
+  "sideBySide": "右侧对比"
 }

@@ -12,8 +12,8 @@ import {
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
 import { notifications } from "@mantine/notifications";
-import { getAiSettings, saveAiSettings, getLanguage, setLanguage } from "../api";
-import type { AiConfig } from "../types";
+import { getAiSettings, saveAiSettings, getLanguage, setLanguage, getTranslationLayout, setTranslationLayout } from "../api";
+import type { AiConfig, TranslationLayout } from "../types";
 import { log } from "../utils/logger";
 
 export default function SettingsPage() {
@@ -26,6 +26,7 @@ export default function SettingsPage() {
     model: "gpt-4o-mini",
   });
   const [lang, setLang] = useState(i18n.language);
+  const [layoutMode, setLayoutMode] = useState<TranslationLayout>("replace");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -45,6 +46,14 @@ export default function SettingsPage() {
       }
     }).catch((e) => {
       log.warn("getLanguage failed, using current i18n language:", e);
+    });
+
+    getTranslationLayout().then((layout) => {
+      if (layout === "replace" || layout === "side-by-side") {
+        setLayoutMode(layout);
+      }
+    }).catch((e) => {
+      log.warn("getTranslationLayout failed, using default:", e);
     });
   }, []);
 
@@ -73,6 +82,13 @@ export default function SettingsPage() {
     setLang(value);
     await i18n.changeLanguage(value);
     setLanguage(value).catch((e) => log.warn("setLanguage failed:", e));
+  };
+
+  const handleLayoutChange = (value: string | null) => {
+    if (!value) return;
+    const layout = value as TranslationLayout;
+    setLayoutMode(layout);
+    setTranslationLayout(layout).catch((e) => log.warn("setTranslationLayout failed:", e));
   };
 
   if (loading) {
@@ -186,6 +202,23 @@ export default function SettingsPage() {
           ]}
           value={lang}
           onChange={handleLanguageChange}
+        />
+      </Paper>
+
+      <Paper withBorder p="md">
+        <Title order={5} mb="md">
+          {t("translationLayout")}
+        </Title>
+        <Text size="sm" c="dimmed" mb="lg">
+          {t("translationLayoutDesc")}
+        </Text>
+        <Select
+          data={[
+            { value: "replace", label: t("replaceMode") },
+            { value: "side-by-side", label: t("sideBySide") },
+          ]}
+          value={layoutMode}
+          onChange={handleLayoutChange}
         />
       </Paper>
 

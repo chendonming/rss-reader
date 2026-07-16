@@ -22,5 +22,9 @@
   "language": "Language",
   "languageDescription": "Interface language",
   "chinese": "Chinese",
-  "english": "English"
+  "english": "English",
+  "translationLayout": "Translation Layout",
+  "translationLayoutDesc": "Choose how translated articles are displayed.",
+  "replaceMode": "Replace",
+  "sideBySide": "Side by Side"
 }
