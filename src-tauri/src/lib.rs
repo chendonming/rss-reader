@@ -70,9 +70,11 @@ pub fn run() {
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(1800));
+                // First tick is immediate in Tokio — skip it to avoid blocking
+                // the DB lock on startup with an HTTP request.
+                interval.tick().await;
                 loop {
                     interval.tick().await;
-                    // Get feed list quickly without holding the lock
                     let feeds = {
                         let state = match app_handle.try_state::<AppState>() {
                             Some(s) => s,
@@ -90,20 +92,35 @@ pub fn run() {
                     log::info!("Background refresh: {} feeds to check", feeds.len());
                     for feed in feeds {
                         let handle = app_handle.clone();
+                        let feed_id = feed.id.clone();
+                        let feed_url = feed.url.clone();
+                        // Run in spawn_blocking to avoid blocking the async runtime.
+                        // DB lock is held ONLY for the DB write, NOT during the HTTP fetch.
                         if let Err(e) = tokio::task::spawn_blocking(move || {
-                            let state = match handle.try_state::<AppState>() {
-                                Some(s) => s,
-                                _ => return,
-                            };
-                            let db = match state.db.lock() {
-                                Ok(guard) => guard,
-                                Err(e) => {
-                                    log::error!("Background refresh: db lock poisoned: {}", e);
-                                    return;
+                            match fetcher::fetch_and_parse_feed(&feed_url) {
+                                Ok((_, _, _, articles)) => {
+                                    let count = articles.len();
+                                    let state = match handle.try_state::<AppState>() {
+                                        Some(s) => s,
+                                        _ => return,
+                                    };
+                                    let db = match state.db.lock() {
+                                        Ok(guard) => guard,
+                                        Err(e) => {
+                                            log::error!("Background refresh: db lock poisoned: {}", e);
+                                            return;
+                                        }
+                                    };
+                                    if let Err(e) = db.insert_articles(&feed_id, &articles) {
+                                        log::error!("Failed to insert articles for feed {}: {}", feed_id, e);
+                                    } else if count > 0 {
+                                        log::info!("Background refresh: {} new articles for feed '{}'", count, feed_id);
+                                    }
+                                    db.update_feed_fetch_time(&feed_id).ok();
                                 }
-                            };
-                            if let Err(e) = fetcher::refresh::refresh_single_feed(&db, &feed.id) {
-                                log::error!("Failed to refresh feed {}: {}", feed.id, e);
+                                Err(e) => {
+                                    log::warn!("Background refresh: failed to fetch '{}': {}", feed_url, e);
+                                }
                             }
                         }).await {
                             log::error!("Background refresh task panicked: {:?}", e);

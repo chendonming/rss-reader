@@ -1,5 +1,3 @@
-pub mod refresh;
-
 use crate::db::Article;
 use feed_rs::parser;
 

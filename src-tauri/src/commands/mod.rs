@@ -28,20 +28,23 @@ pub fn set_translation_layout(state: State<'_, AppState>, layout: String) -> Res
 #[tauri::command]
 pub fn add_feed(state: State<'_, AppState>, url: String) -> Result<Feed, String> {
     log::info!("add_feed called: {}", url);
-    let db = state.db.lock().map_err(|e| e.to_string())?;
-
-    if db.feed_exists_by_url(&url).map_err(|e| e.to_string())? {
-        log::warn!("add_feed failed: feed already exists: {}", url);
-        return Err("Feed already exists".to_string());
+    // Step 1: Check if feed already exists (lock+release)
+    {
+        let db = state.db.lock().map_err(|e| e.to_string())?;
+        if db.feed_exists_by_url(&url).map_err(|e| e.to_string())? {
+            log::warn!("add_feed failed: feed already exists: {}", url);
+            return Err("Feed already exists".to_string());
+        }
     }
-
+    // Step 2: Fetch & parse RSS (no lock held)
     let (title, site_url, description, articles) = fetcher::fetch_and_parse_feed(&url)?;
+    // Step 3: Re-acquire lock for DB writes
+    let db = state.db.lock().map_err(|e| e.to_string())?;
     let feed = db
         .add_feed(&url, &title, site_url.as_deref(), description.as_deref())
         .map_err(|e| e.to_string())?;
     db.insert_articles(&feed.id, &articles)
         .map_err(|e| e.to_string())?;
-
     log::info!("add_feed: added '{}' with {} articles", feed.title, articles.len());
     Ok(feed)
 }
@@ -123,17 +126,56 @@ pub fn delete_feed(state: State<'_, AppState>, id: String) -> Result<(), String>
 #[tauri::command]
 pub fn refresh_all(state: State<'_, AppState>) -> Result<usize, String> {
     log::info!("refresh_all called");
-    let db = state.db.lock().map_err(|e| e.to_string())?;
-    let count = fetcher::refresh::refresh_all_feeds(&db)?;
-    log::info!("refresh_all: {} new articles", count);
-    Ok(count)
+    // Step 1: Get feed list (with lock, release before HTTP)
+    let feeds = {
+        let db = state.db.lock().map_err(|e| e.to_string())?;
+        db.get_all_feeds().map_err(|e| e.to_string())?
+    };
+    let mut total = 0;
+    for feed in &feeds {
+        match fetcher::fetch_and_parse_feed(&feed.url) {
+            Ok((_, _, _, articles)) => {
+                let count = articles.len();
+                // Step 2: Lock again only for DB write
+                let db = state.db.lock().map_err(|e| e.to_string())?;
+                if let Err(e) = db.insert_articles(&feed.id, &articles) {
+                    log::error!("refresh_all: failed to insert articles for feed {}: {}", feed.id, e);
+                } else {
+                    total += count;
+                    log::info!("refresh_all: {} new articles from '{}'", count, feed.title);
+                }
+                db.update_feed_fetch_time(&feed.id).ok();
+            }
+            Err(e) => {
+                log::warn!("refresh_all: failed to fetch '{}': {}", feed.url, e);
+            }
+        }
+    }
+    log::info!("refresh_all: done, {} total new articles", total);
+    Ok(total)
 }
 
 #[tauri::command]
 pub fn refresh_feed(state: State<'_, AppState>, id: String) -> Result<usize, String> {
     log::info!("refresh_feed called: id={}", id);
+    // Step 1: Get feed URL (with lock, release before HTTP)
+    let feed_url = {
+        let db = state.db.lock().map_err(|e| e.to_string())?;
+        let feeds = db.get_all_feeds().map_err(|e| e.to_string())?;
+        let feed = feeds.into_iter().find(|f| f.id == id)
+            .ok_or_else(|| "Feed not found".to_string())?;
+        log::info!("refresh_feed: fetching '{}' ({})", feed.title, feed.url);
+        feed.url.clone()
+    };
+    // Step 2: Fetch RSS (no lock held)
+    let (_, _, _, articles) = fetcher::fetch_and_parse_feed(&feed_url)?;
+    let count = articles.len();
+    // Step 3: Re-acquire lock for DB write
     let db = state.db.lock().map_err(|e| e.to_string())?;
-    let count = fetcher::refresh::refresh_single_feed(&db, &id)?;
+    db.insert_articles(&id, &articles)
+        .map_err(|e| e.to_string())?;
+    db.update_feed_fetch_time(&id)
+        .map_err(|e| e.to_string())?;
     log::info!("refresh_feed: {} new articles for feed {}", count, id);
     Ok(count)
 }

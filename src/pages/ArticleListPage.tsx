@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, lazy, Suspense } from "react";
 import {
   Text,
   Group,
@@ -26,9 +26,14 @@ import {
   refreshAll,
 } from "../api";
 import type { Article } from "../types";
-import { ArticleReader } from "../components/ArticleReader/ArticleReader";
 import { notifications } from "@mantine/notifications";
 import { log } from "../utils/logger";
+
+const ArticleReader = lazy(() =>
+  import("../components/ArticleReader/ArticleReader").then((m) => ({
+    default: m.ArticleReader,
+  }))
+);
 
 function formatDateLabel(dateStr: string, locale: string): string {
   const date = new Date(dateStr);
@@ -94,7 +99,7 @@ export default function ArticleListPage() {
           ", starred=" +
           isStarred
       );
-      return getArticles(feedId, isStarred, 1, 100);
+      return getArticles(feedId, isStarred, 1, 30);
     },
   });
 
@@ -357,7 +362,9 @@ export default function ArticleListPage() {
       {/* Article Reader */}
       <div style={{ flex: 1, minWidth: 0 }}>
         {selectedArticle ? (
-          <ArticleReader article={selectedArticle} />
+          <Suspense fallback={<Group justify="center" py="xl"><Loader size="sm" /></Group>}>
+            <ArticleReader article={selectedArticle} />
+          </Suspense>
         ) : (
           <div className="rd-empty">
             <div className="rd-empty-text">{t("selectArticle")}</div>
